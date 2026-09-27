@@ -27,7 +27,6 @@ Kategorien: **Neu** (neue Funktionen), **Verbessert** (bestehendes Verhalten), *
 - **Wiederholung nach Fälligkeit (Spaced Repetition):** Falsche Antworten kommen nach 1, 3
   und 7 Tagen wieder. Die Startseite zeigt „Heute fällig“, im Quiz gibt es einen eigenen
   Knopf dafür.
-
 - Neun Erklärgrafiken „Erlaubt vs. Fehler“ in den Kapiteln: Übertritt, Ball auf der Linie,
   Überquerungsraum, Übergreifen beim Block, Netzberührung, Fußfehler beim Aufschlag,
   Sichtblock, Angriff von Hinterspielern und oberes Zuspiel des Libero. Bei Übertritt und
@@ -43,6 +42,8 @@ Kategorien: **Neu** (neue Funktionen), **Verbessert** (bestehendes Verhalten), *
 - Regel-Coach, der Fragen über Claude beantwortet, wenn die Seite als Artifact läuft.
 
 ### Verbessert
+- Pfiff-Timing: Ein Knopf „Wiederholen“ spielt den Spielzug noch einmal ab, ohne die
+  Wertung zu verändern. Der Zähler oben stimmt jetzt auch nach einem zu frühen Pfiff.
 - Lernen: Die Kapitelliste scrollt ohne sichtbare Scrollbar.
 - Die Handzeichen-Figuren sind unten kürzer, der lange Oberkörper lenkte vom Zeichen ab.
 - Alle Handzeichen-Figuren sind neu gezeichnet, im Stil der FIVB-Diagramme: Oberkörper mit
