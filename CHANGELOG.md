@@ -43,7 +43,9 @@ Kategorien: **Neu** (neue Funktionen), **Verbessert** (bestehendes Verhalten), *
 - Regel-Coach, der Fragen über Claude beantwortet, wenn die Seite als Artifact läuft.
 
 ### Verbessert
-- Pfiff-Timing: Ein Knopf „Wiederholen“ mit Wiederholen-Symbol spielt den Spielzug noch einmal ab, ohne die Wertung zu verändern. Der Zähler oben stimmt jetzt auch nach einem zu frühen Pfiff.
 - Die Handzeichen-Figuren sind unten kürzer, der lange Oberkörper lenkte vom Zeichen ab.
 - Alle Handzeichen-Figuren sind neu gezeichnet, im Stil der FIVB-Diagramme: Oberkörper mit
   Trikot, Arme mit Ellbogen, Ausgangsstellung gestrichelt und Bewegung als Pfeil.
+
+### Behoben
+- Lernen: Die Kapitelliste lässt sich wieder scrollen. Auf breiten Bildschirmen hat sie einen eigenen Scrollbereich, in der schmalen Ansicht scrollt das Mausrad seitwärts, und nach einem Klick springt sie nicht mehr an den Anfang.

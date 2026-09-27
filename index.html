@@ -135,7 +135,7 @@ main{padding-block:1.6rem 3rem}
 .learn{display:grid;gap:1.4rem}
 @media (min-width:920px){.learn{grid-template-columns:290px 1fr;align-items:start}}
 .ch-list{display:flex;flex-direction:column;gap:.3rem}
-@media (min-width:920px){.ch-list{position:sticky;top:calc(env(safe-area-inset-top,0px) + 110px)}}
+@media (min-width:920px){.ch-list{position:sticky;top:calc(env(safe-area-inset-top,0px) + 110px);max-height:calc(100vh - 130px);max-height:calc(100dvh - 130px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:2px 4px 2px 2px}}
 @media (max-width:919px){.ch-list{flex-direction:row;overflow-x:auto;padding-bottom:.4rem;scroll-snap-type:x proximity}.ch-item{min-width:230px;scroll-snap-align:start}}
 .ch-item{display:grid;grid-template-columns:auto 1fr auto;gap:.6rem;align-items:center;text-align:left;background:none;border:1px solid transparent;border-radius:10px;padding:.55rem .6rem;cursor:pointer}
 .ch-item:hover{background:var(--surface)}

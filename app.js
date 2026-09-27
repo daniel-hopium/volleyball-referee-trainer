@@ -210,7 +210,9 @@ onShow.start = renderStart;
 /* ---------- Lernen ---------- */
 function renderLernen() {
   const k = CHMAP[P.lastCh] ? P.lastCh : 'feld';
-  $('#ch-list').innerHTML = D.CH.map((c, i) => `<button type="button" class="ch-item${c.k === k ? ' is-active' : ''}" data-ch="${c.k}"><span class="ch-no">${i + 1}</span><span class="ch-tt"><b>${esc(c.t)}</b><small>${esc(c.s)}</small></span><span class="ch-done${P.ch[c.k] ? ' on' : ''}" aria-label="${P.ch[c.k] ? 'verstanden' : 'offen'}"></span></button>`).join('');
+  const CL = $('#ch-list'), keepTop = CL.scrollTop, keepLeft = CL.scrollLeft;
+  CL.innerHTML = D.CH.map((c, i) => `<button type="button" class="ch-item${c.k === k ? ' is-active' : ''}" data-ch="${c.k}"><span class="ch-no">${i + 1}</span><span class="ch-tt"><b>${esc(c.t)}</b><small>${esc(c.s)}</small></span><span class="ch-done${P.ch[c.k] ? ' on' : ''}" aria-label="${P.ch[c.k] ? 'verstanden' : 'offen'}"></span></button>`).join('');
+  CL.scrollTop = keepTop; CL.scrollLeft = keepLeft;
   $$('#ch-list .ch-item').forEach(b => b.addEventListener('click', () => { P.lastCh = b.dataset.ch; save(); renderLernen(); $('#ch-body').scrollIntoView({ block: 'start' }); }));
   const c = CHMAP[k];
   const nextC = D.CH[c.i + 1];
@@ -233,6 +235,14 @@ function renderLernen() {
   if (nextC) $('#ch-next').addEventListener('click', () => { P.ch[k] = true; P.lastCh = nextC.k; save(); renderLernen(); window.scrollTo(0, 0); });
 }
 onShow.lernen = renderLernen;
+/* In der waagrechten Kapitelleiste (schmale Fenster) soll das Mausrad seitwärts scrollen */
+$('#ch-list').addEventListener('wheel', e => {
+  const el = e.currentTarget, max = el.scrollWidth - el.clientWidth;
+  if (max <= 0 || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+  if ((e.deltaY < 0 && el.scrollLeft <= 0) || (e.deltaY > 0 && el.scrollLeft >= max - 1)) return;
+  el.scrollLeft += e.deltaY;
+  e.preventDefault();
+}, { passive: false });
 
 /* ---------- Quiz-Baustein ---------- */
 function questionCard(q, idx, total, onAnswer, onNext) {
