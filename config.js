@@ -3,6 +3,6 @@
    supabase/schema.sql sorgt dafür, dass jeder nur seine eigene Zeile lesen und schreiben kann.
    Niemals den service_role- bzw. Secret-Key hier eintragen. */
 window.SCHIRI_SYNC_CONFIG = {
-  url: '',
-  key: ''
+  url: 'https://okqxolkcewtingehbgbq.supabase.co',
+  key: 'sb_publishable_cYkr2VwsmMMb6WQE-uGMzQ_sroMymT1'
 };
