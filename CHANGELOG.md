@@ -12,6 +12,9 @@ Kategorien: **Neu** (neue Funktionen), **Verbessert** (bestehendes Verhalten), *
 ## Unveröffentlicht
 
 ### Neu
+- Jede Regelnummer ist ein Link ins offizielle FIVB-Regelwerk (PDF) und öffnet es direkt
+  auf der passenden Seite. Handzeichen verlinken zusätzlich auf ihr Diagramm, Regelnummern
+  in Antworten des Coaches werden ebenfalls verlinkt.
 - Lern-Web-App für die Volleyball-Schiedsrichterprüfung nach den FIVB-Regeln 2025–2028:
   zehn Kapitel, 130 Quizfragen mit Fehlerkartei, Probeprüfung (30 Fragen, 30 Minuten),
   26 Spielsituationen und alle offiziellen Handzeichen als Übersicht, Karteikarten und Quiz.

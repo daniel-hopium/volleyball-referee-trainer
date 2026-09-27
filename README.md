@@ -18,6 +18,11 @@ Rules 2025–2028.
 - **Coach:** Fragen an Claude. Das funktioniert nur, wenn die Seite als Claude-Artifact
   läuft, sonst wird der Bereich ausgeblendet.
 
+Jede Regelnummer ist ein Link ins [FIVB-Regelwerk](https://www.fivb.com/wp-content/uploads/2025/01/FIVB-Volleyball_Rules2025_2028-EN-v05.pdf)
+und öffnet das PDF direkt auf der richtigen Seite (`#page=N`). Die Seitenzahlen stehen in
+`data.js` (`RP` für Regeln, `SIGP` für Handzeichen). Sie wurden aus dem PDF ausgelesen und
+gelten nur für genau diese Fassung (v05).
+
 Der Fortschritt wird im `localStorage` des Browsers gespeichert.
 
 ## Starten

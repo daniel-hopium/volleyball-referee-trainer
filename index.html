@@ -99,6 +99,9 @@ main{padding-block:1.6rem 3rem}
 .pill-ok{background:var(--ok-soft);color:var(--ok)}
 .pill-bad{background:var(--bad-soft);color:var(--bad)}
 .r{display:inline-block;font:500 .74rem/1.4 var(--f-mono);background:var(--surface-2);color:var(--ink-2);border-radius:5px;padding:.08rem .45rem;white-space:nowrap;vertical-align:.08em}
+.r a,.rl a,.doclink{color:inherit;text-decoration:underline;text-decoration-color:var(--ink-3);text-underline-offset:2px}
+.r a:hover,.rl a:hover,.doclink:hover{color:var(--blue);text-decoration-color:var(--blue)}
+.msg a{color:var(--blue)}
 .bar{display:block;height:6px;border-radius:9px;background:var(--surface-2);overflow:hidden}
 .bar>span{display:block;height:100%;background:var(--btn);border-radius:9px}
 .bar>span.ok{background:var(--ok)}
@@ -450,7 +453,7 @@ footer{border-top:1px solid var(--line);padding-block:1.4rem 2rem;color:var(--in
 
 <section id="v-zeichen" class="view" hidden>
   <div class="view-head">
-    <div><p class="eyebrow">Regel 30 · Diagramm 11 und 12</p><h2>Handzeichen</h2><p class="muted">25 Zeichen der Schiedsrichter und 5 Flaggenzeichen der Linienrichter. Tippe ein Zeichen an für Details.</p></div>
+    <div><p class="eyebrow"><span class="rl">Regel 30</span> · <a class="doclink" href="https://www.fivb.com/wp-content/uploads/2025/01/FIVB-Volleyball_Rules2025_2028-EN-v05.pdf#page=75" target="_blank" rel="noopener">Diagramm 11 und 12</a></p><h2>Handzeichen</h2><p class="muted">25 Zeichen der Schiedsrichter und 5 Flaggenzeichen der Linienrichter. Tippe ein Zeichen an für Details.</p></div>
     <div class="seg" id="sig-modes" role="group" aria-label="Modus"><button type="button" data-m="alle" aria-pressed="true">Übersicht</button><button type="button" data-m="karten" aria-pressed="false">Karteikarten</button><button type="button" data-m="quiz" aria-pressed="false">Quiz</button></div>
   </div>
   <div id="sig-body"></div>
@@ -458,7 +461,7 @@ footer{border-top:1px solid var(--line);padding-block:1.4rem 2rem;color:var(--in
 
 <section id="v-aufstellung" class="view" hidden>
   <div class="view-head">
-    <div><p class="eyebrow">Regel 7 und 12.2</p><h2>Aufstellung &amp; Rotation</h2><p class="muted">Zieh die Spieler selbst herum, finde Positionsfehler oder verfolge als Schreiber die Aufschlagfolge.</p></div>
+    <div><p class="eyebrow"><span class="rl">Regel 7 und 12.2</span></p><h2>Aufstellung &amp; Rotation</h2><p class="muted">Zieh die Spieler selbst herum, finde Positionsfehler oder verfolge als Schreiber die Aufschlagfolge.</p></div>
     <div class="seg" id="aufst-tabs" role="group" aria-label="Trainer"><button type="button" data-t="pos" aria-pressed="true">Positionen</button><button type="button" data-t="so" aria-pressed="false">Aufschlagfolge</button></div>
   </div>
   <div id="pos-wrap">
@@ -466,7 +469,7 @@ footer{border-top:1px solid var(--line);padding-block:1.4rem 2rem;color:var(--in
     <div id="pos-body"></div>
   </div>
   <div id="so-wrap" hidden>
-    <p class="muted">Du siehst nur die Aufstellungsblätter und den Spielstand. Nach jedem Ballwechsel sagst du, wer aufschlägt. Genau das kontrolliert der Schreiber (Regel 27.2.2.2).</p>
+    <p class="muted">Du siehst nur die Aufstellungsblätter und den Spielstand. Nach jedem Ballwechsel sagst du, wer aufschlägt. Genau das kontrolliert der Schreiber. <span class="r">Regel 27.2.2.2</span></p>
     <div id="so-body"></div>
   </div>
 </section>
@@ -529,7 +532,7 @@ footer{border-top:1px solid var(--line);padding-block:1.4rem 2rem;color:var(--in
 
 <footer>
   <div class="wrap">
-    Grundlage: FIVB Official Volleyball Rules 2025–2028 (gültig seit 1. Jänner 2025). Regelnummern beziehen sich auf dieses Regelwerk. Nationale Durchführungsbestimmungen des ÖVV und der Landesverbände können abweichen. Die Handzeichen-Figuren sind vereinfachte Skizzen.
+    Grundlage: <a class="doclink" href="https://www.fivb.com/wp-content/uploads/2025/01/FIVB-Volleyball_Rules2025_2028-EN-v05.pdf" target="_blank" rel="noopener">FIVB Official Volleyball Rules 2025–2028 (PDF)</a>, gültig seit 1. Jänner 2025. Jede Regelnummer auf dieser Seite ist ein Link und öffnet das PDF auf der passenden Seite. Nationale Durchführungsbestimmungen des ÖVV und der Landesverbände können abweichen. Die Handzeichen-Figuren sind vereinfachte Skizzen.
   </div>
 </footer>
 

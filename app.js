@@ -15,6 +15,27 @@ const CHMAP = Object.fromEntries(D.CH.map((c, i) => [c.k, Object.assign({ i }, c
 const SIGMAP = Object.fromEntries(D.SIG.map(s => [s.id, s]));
 const WHO = { F: '1. SR', FS: '1. und 2. SR', L: 'Linienrichter' };
 
+/* ---------- Regelverweise als Links ins FIVB-Regelwerk ---------- */
+function rulePage(r) {
+  const parts = r.split('.');
+  while (parts.length) { const p = D.RP[parts.join('.')]; if (p) return p; parts.pop(); }
+  return null;
+}
+const pdfLink = (page, label, title) => `<a href="${D.PDF}#page=${page}" target="_blank" rel="noopener" title="${esc(title)}">${label}</a>`;
+function linkRuleText(txt) {
+  const i = txt.indexOf('Regel');
+  const pre = i >= 0 ? txt.slice(0, i + 5) : '';
+  const rest = i >= 0 ? txt.slice(i + 5) : txt;
+  return esc(pre) + esc(rest).replace(/\d+(?:\.\d+)*/g, m => { const p = rulePage(m); return p ? pdfLink(p, m, `Regel ${m} im FIVB-Regelwerk, PDF-Seite ${p}`) : m; });
+}
+function linkRules(root) { $$('.r:not([data-l]), .rl:not([data-l])', root).forEach(el => { el.dataset.l = '1'; el.innerHTML = linkRuleText(el.textContent); }); }
+function linkFreeText(txt) {
+  return esc(txt).replace(/\b\d{1,2}(?:\.\d{1,2}){1,4}\b/g, m => { const p = +m.split('.')[0] <= 30 ? rulePage(m) : null; return p ? pdfLink(p, m, `Regel ${m}, PDF-Seite ${p}`) : m; });
+}
+const rulePill = txt => `<span class="r">${esc(txt)}</span>`;
+linkRules(document);
+new MutationObserver(() => linkRules(document)).observe(document.body, { childList: true, subtree: true });
+
 /* ---------- Fortschritt (nur in diesem Browser) ---------- */
 const KEY = 'schiri-trainer-v1';
 let P = { ch: {}, q: {}, sig: {}, sit: {}, exams: [], lastCh: 'feld' };
@@ -331,7 +352,7 @@ function renderZeichen() {
 function openSig(id) {
   const s = SIGMAP[id];
   const m = $('#modal');
-  $('#modal-body').innerHTML = `<div class="sig-detail">${pict(s.id)}<div><p class="eyebrow">Zeichen ${s.id.replace('L', 'LR ')} · ${WHO[s.who]}</p><h3>${esc(s.n)}</h3><p>${esc(s.d)}</p><p class="muted"><b>Beispiel:</b> ${esc(s.sit)}</p><span class="r">Regel ${esc(s.r)}</span></div></div>`;
+  $('#modal-body').innerHTML = `<div class="sig-detail">${pict(s.id)}<div><p class="eyebrow">Zeichen ${s.id.replace('L', 'LR ')} · ${WHO[s.who]}</p><h3>${esc(s.n)}</h3><p>${esc(s.d)}</p><p class="muted"><b>Beispiel:</b> ${esc(s.sit)}</p><div class="fb-row"><span class="r">Regel ${esc(s.r)}</span>${D.SIGP[s.id] ? pdfLink(D.SIGP[s.id], `Zeichen im Regelwerk ansehen (${s.who === 'L' ? 'Diagramm 12' : 'Diagramm 11'})`, `PDF-Seite ${D.SIGP[s.id]}`) : ''}</div></div></div>`;
   m.hidden = false;
   $('#modal-close').focus();
 }
@@ -512,10 +533,10 @@ function renderPos() {
   let verdict = '';
   if (POS.mode === 'frei') {
     verdict = POS.team === 'aufschlag'
-      ? `<div class="verdict ${f.length ? 'v-bad' : 'v-ok'}"><b>${f.length ? 'Fehler' : 'Erlaubt'}</b><p>Aufschlagende Mannschaft: Seit 2025 ist die Reihenfolge frei (Regel 7.4). Alle außer dem Aufschläger müssen aber im eigenen Feld stehen.</p>${f.map(x => `<p>${esc(x.t)}</p>`).join('')}</div>`
-      : `<div class="verdict ${f.length ? 'v-bad' : 'v-ok'}"><b>${f.length ? 'Positionsfehler' : 'Korrekte Aufstellung'}</b>${f.length ? f.map(x => `<p>${esc(x.t)}</p>`).join('') : '<p>Alle Nachbarn stehen richtig zueinander.</p>'}</div>`;
+      ? `<div class="verdict ${f.length ? 'v-bad' : 'v-ok'}"><b>${f.length ? 'Fehler' : 'Erlaubt'}</b><p>Aufschlagende Mannschaft: Seit 2025 ist die Reihenfolge frei ${rulePill('Regel 7.4')}. Alle außer dem Aufschläger müssen aber im eigenen Feld stehen.</p>${f.map(x => `<p>${esc(x.t)}</p>`).join('')}</div>`
+      : `<div class="verdict ${f.length ? 'v-bad' : 'v-ok'}"><b>${f.length ? 'Positionsfehler' : 'Korrekte Aufstellung'}</b>${f.length ? f.map(x => `<p>${esc(x.t)}</p>`).join('') : '<p>Alle Nachbarn stehen richtig zueinander.</p>'}${rulePill('Regel 7.4.2, 7.4.3, 7.5')}</div>`;
   } else if (POS.answered) {
-    verdict = `<div class="verdict ${POS.lastOk ? 'v-ok' : 'v-bad'}"><b>${POS.lastOk ? 'Richtig erkannt.' : 'Falsch.'}</b>${f.length ? f.map(x => `<p>${esc(x.t)}</p>`).join('') : '<p>Diese Aufstellung ist korrekt: alle Nachbarn stehen richtig, Diagonalen zählen nicht.</p>'}</div>`;
+    verdict = `<div class="verdict ${POS.lastOk ? 'v-ok' : 'v-bad'}"><b>${POS.lastOk ? 'Richtig erkannt.' : 'Falsch.'}</b>${f.length ? f.map(x => `<p>${esc(x.t)}</p>`).join('') : '<p>Diese Aufstellung ist korrekt: alle Nachbarn stehen richtig, Diagonalen zählen nicht.</p>'}${rulePill('Regel 7.4.2, 7.4.3, 7.5')}</div>`;
   } else {
     verdict = `<div class="verdict"><b>Annehmende Mannschaft im Moment des Aufschlagschlags.</b><p>Ist das eine korrekte Aufstellung?</p></div>`;
   }
@@ -577,7 +598,7 @@ function soRender(msg) {
   box.innerHTML = `
     <div class="so-top"><div class="score"><span>Heim</span><b>${SO.sc.H}</b><em>:</em><b>${SO.sc.G}</b><span>Gast</span></div>
       <p>Aufschlag: <b>${TEAM[SO.srv]}</b>, Nr. <b>${SO.cur[SO.srv][0]}</b></p></div>
-    ${msg ? `<div class="fb ${msg.ok ? 'fb-ok' : 'fb-bad'}"><p>${msg.t}</p></div>` : ''}
+    ${msg ? `<div class="fb ${msg.ok ? 'fb-ok' : 'fb-bad'}"><p>${msg.t}</p>${rulePill('Regel 6.1.3, 7.6, 12.2.2')}</div>` : ''}
     ${qHtml}
     <p class="muted small">Richtig: ${SO.r} von ${SO.n}. Heim hat die Auslosung gewonnen und schlägt zuerst auf.</p>
     <div class="sheets">${sheet('H', SO.st.H, 'Aufstellungsblatt Heim')}${sheet('G', SO.st.G, 'Aufstellungsblatt Gast')}</div>
@@ -649,7 +670,7 @@ const WIDGETS = {
         e.stopPropagation();
         const [t, d, r] = ZONES[z.dataset.z];
         $$('.z', el).forEach(x => x.classList.toggle('sel', x.dataset.z === z.dataset.z));
-        info.innerHTML = `<p class="eyebrow">Regel ${r}</p><h4>${t}</h4><p>${d}</p>`;
+        info.innerHTML = `<h4>${t}</h4><p>${d}</p>${rulePill('Regel ' + r)}`;
       };
       z.addEventListener('click', act);
       z.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(e); } });
@@ -696,7 +717,7 @@ const WIDGETS = {
       ['Auszeit genehmigen', '2. SR'], ['Sichtblock der aufschlagenden Mannschaft', '1. SR'], ['Gehaltener Ball bei der Abwehr', '1. SR'],
       ['Ball berührt einen Fremdkörper (z. B. Basketballkorb)', '2. SR'], ['Fußfehler des Aufschlägers anzeigen', 'Linienrichter'], ['8. Punkt im Entscheidungssatz ansagen', 'Schreiber']
     ];
-    const why = { '2. SR': 'Das gehört zum Bereich des 2. SR (Regel 24).', '1. SR': 'Das entscheidet der 1. SR (Regel 23.3.2.3).', 'Schreiber': 'Das ist Aufgabe des Schreibers, er meldet mit dem Summer (Regel 27).', 'Linienrichter': 'Das zeigt der Linienrichter mit der Flagge an, der 1. SR entscheidet (Regel 29).' };
+    const why = { '2. SR': 'Das gehört zum Bereich des 2. SR. ' + rulePill('Regel 24.3.2'), '1. SR': 'Das entscheidet der 1. SR. ' + rulePill('Regel 23.3.2.3'), 'Schreiber': 'Das ist Aufgabe des Schreibers, er meldet mit dem Summer. ' + rulePill('Regel 27.2.2'), 'Linienrichter': 'Das zeigt der Linienrichter mit der Flagge an, der 1. SR entscheidet. ' + rulePill('Regel 29.2') };
     let order = shuffle(items), i = 0, r = 0;
     const draw = () => {
       if (i >= order.length) {
@@ -722,14 +743,14 @@ const WIDGETS = {
   },
   wechsel(el) {
     const steps = [
-      { t: 'Der Trainer wechselt: Nr. 7 kommt für Nr. 3.', ok: true, e: 'Ersatzspieler 7 kommt zum ersten Mal, Startspieler 3 verlässt zum ersten Mal das Feld.', ap: [[7, 3]] },
+      { t: 'Der Trainer wechselt: Nr. 7 kommt für Nr. 3.', ok: true, e: 'Ersatzspieler 7 kommt zum ersten Mal, Startspieler 3 verlässt zum ersten Mal das Feld (15.6.1, 15.6.2).', ap: [[7, 3]] },
       { t: 'Gleich danach, ohne Ballwechsel dazwischen: Nr. 8 soll für Nr. 1 kommen.', ok: false, e: 'Zwischen zwei Wechselanträgen derselben Mannschaft muss ein abgeschlossener Ballwechsel liegen. Beide Wechsel hätten in einem Antrag kommen müssen (15.2.3).' },
       { t: 'Nach einem Ballwechsel: Nr. 8 soll für Nr. 7 kommen.', ok: false, e: 'Ein Ersatzspieler kann nur von dem Startspieler ersetzt werden, für den er gekommen ist. 7 kann nur durch 3 ersetzt werden (15.6.2).' },
       { t: 'Nr. 3 kommt für Nr. 7 zurück.', ok: true, e: 'Der Startspieler kehrt einmal zurück, auf seine ursprüngliche Position (15.6.1).', ap: [[3, 7]] },
       { t: 'Später im Satz: Nr. 7 soll wieder für Nr. 3 kommen.', ok: false, e: '3 hat das Feld schon einmal verlassen und ist zurückgekehrt. 7 war in diesem Satz schon im Spiel (15.6).' },
       { t: 'Ein Antrag: Nr. 9 für Nr. 5 und Nr. 10 für Nr. 2.', ok: true, e: 'Mehrere Spieler im selben Antrag sind erlaubt. Sie wechseln nacheinander, Paar für Paar (15.2.2, 15.10.4).', ap: [[9, 5], [10, 2]] },
       { t: 'Nach einem Ballwechsel: Nr. 11 für Nr. 4.', ok: true, e: 'Das ist der 5. Wechsel. Der 2. SR meldet ihn dem 1. SR und dem Trainer (24.2.7).', ap: [[11, 4]] },
-      { t: 'Nach einem Ballwechsel: Nr. 12 für Nr. 6.', ok: true, e: 'Der 6. und letzte reguläre Wechsel in diesem Satz, ebenfalls zu melden.', ap: [[12, 6]] },
+      { t: 'Nach einem Ballwechsel: Nr. 12 für Nr. 6.', ok: true, e: 'Der 6. und letzte reguläre Wechsel in diesem Satz, ebenfalls zu melden (15.1, 24.2.7).', ap: [[12, 6]] },
       { t: 'Nach einem Ballwechsel: Nr. 5 soll für Nr. 9 zurück.', ok: false, e: 'Alle 6 Wechsel sind verbraucht. Das ist eine unzulässige Anfrage: beim ersten Mal ohne Verzögerung zurückweisen und eintragen (15.11).' },
       { t: 'Nr. 12 verletzt sich und kann nicht weiterspielen. Darf Nr. 7 für ihn aufs Feld?', ok: true, e: 'Regulär geht nichts mehr (6 Wechsel verbraucht). Ausnahmewechsel: jeder, der nicht am Feld ist, außer dem Libero. 12 darf in diesem Spiel nicht mehr zurück (15.7).', ap: [[7, 12]], exc: true }
     ];
@@ -744,7 +765,7 @@ const WIDGETS = {
       el.innerHTML = `<div class="widget"><p class="eyebrow">Wechsel-Simulator · Schritt ${i + 1}/${steps.length}</p>
         <div class="wx-state"><span>Am Feld: ${field.map(x => `<b class="jersey">${x}</b>`).join('')}</span><span>Reguläre Wechsel: <b>${n}/6</b></span></div>
         <p class="q-text">${s.t}</p>
-        ${answered ? `<div class="fb ${last ? 'fb-ok' : 'fb-bad'}"><p class="fb-h">${last ? 'Richtig' : 'Falsch'}: ${s.ok ? 'erlaubt' : 'nicht erlaubt'}.</p><p>${s.e}</p><div class="fb-row"><button type="button" class="btn btn-primary btn-s" id="wx-next">Weiter</button></div></div>`
+        ${answered ? `<div class="fb ${last ? 'fb-ok' : 'fb-bad'}"><p class="fb-h">${last ? 'Richtig' : 'Falsch'}: ${s.ok ? 'erlaubt' : 'nicht erlaubt'}.</p><p>${s.e.replace(/ \(([\d.,– ]+)\)/g, (m, g) => ' ' + rulePill('Regel ' + g))}</p><div class="fb-row"><button type="button" class="btn btn-primary btn-s" id="wx-next">Weiter</button></div></div>`
         : '<div class="chips"><button type="button" class="chip big" data-v="1">Erlaubt</button><button type="button" class="chip big" data-v="0">Nicht erlaubt</button></div>'}
         <p class="muted small">Startaufstellung 1–6, auf der Bank 7–12. Ein Satz, alles in Reihenfolge.</p></div>`;
       $$('[data-v]', el).forEach(b => b.addEventListener('click', () => {
@@ -807,6 +828,7 @@ async function coachSend(text) {
       onText: ({ text: t }) => { out.classList.remove('pending'); out.textContent = t; }
     });
     out.classList.remove('pending');
+    out.innerHTML = linkFreeText(ans);
     coachTurns.push({ role: 'assistant', content: ans });
   } catch (e) {
     out.classList.remove('pending');
