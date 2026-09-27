@@ -40,6 +40,7 @@ python -m http.server 8000
 |---|---|
 | `index.html` | Seitenaufbau und Styles, heller und dunkler Modus |
 | `data.js` | Lerninhalte: Kapitel, Fragen, Handzeichen, Situationen |
+| `figures.js` | Erklärgrafiken „Erlaubt vs. Fehler“ als SVG, per `data-widget="fig…"` in die Kapitel eingebunden |
 | `app.js` | Logik: Navigation, Quiz, Prüfung, Trainer, Widgets, Coach |
 
 Neue Fragen kommen in `data.js` in das Array `Q`, im Format

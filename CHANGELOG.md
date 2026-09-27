@@ -12,6 +12,10 @@ Kategorien: **Neu** (neue Funktionen), **Verbessert** (bestehendes Verhalten), *
 ## Unveröffentlicht
 
 ### Neu
+- Neun Erklärgrafiken „Erlaubt vs. Fehler“ in den Kapiteln: Übertritt, Ball auf der Linie,
+  Überquerungsraum, Übergreifen beim Block, Netzberührung, Fußfehler beim Aufschlag,
+  Sichtblock, Angriff von Hinterspielern und oberes Zuspiel des Libero. Bei Übertritt und
+  Ball auf der Linie verschiebt man Fuß bzw. Ball selbst und sieht sofort die Entscheidung.
 - Jede Regelnummer ist ein Link ins offizielle FIVB-Regelwerk (PDF) und öffnet es direkt
   auf der passenden Seite. Handzeichen verlinken zusätzlich auf ihr Diagramm, Regelnummern
   in Antworten des Coaches werden ebenfalls verlinkt.

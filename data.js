@@ -111,6 +111,7 @@ const CH = [
 <li><b>In</b>: Irgendein Teil des Balles berührt beim Bodenkontakt das Feld, Linien eingeschlossen. <span class="r">8.3</span></li>
 <li><b>Aus</b>: Ball landet komplett außerhalb, berührt einen Gegenstand außerhalb, die Decke oder eine Person außerhalb des Spiels, berührt Antenne, Seile, Pfosten oder das Netz außerhalb der Seitenbänder, überquert die Netzebene ganz oder teilweise außerhalb des Überquerungsraums (Ausnahme 10.1.2) oder fliegt komplett unter dem Netz durch. <span class="r">8.4</span></li>
 </ul>
+<div data-widget="figBall"></div>
 <h3>Berührungen</h3>
 <ul>
 <li>Höchstens <b>drei Berührungen</b> pro Mannschaft, der Block zählt nicht dazu. Sonst: Fehler „vier Berührungen“. <span class="r">9.1</span></li>
@@ -144,11 +145,13 @@ const CH = [
 <li>Der Ball darf das Netz beim Überqueren berühren. <span class="r">10.2</span></li>
 <li>Ball ins Netz geschlagen: darf innerhalb der drei Berührungen weitergespielt werden. Zerreißt er das Netz oder reißt es herunter: Wiederholung. <span class="r">10.3</span></li>
 </ul>
+<div data-widget="figCrossing"></div>
 <h3>Über das Netz greifen</h3>
 <ul>
 <li>Beim <b>Block</b> darf der Ball jenseits des Netzes berührt werden, aber nicht vor oder während des gegnerischen Angriffsschlags. <span class="r">11.1.1, 14.3</span></li>
 <li>Nach einem <b>Angriffsschlag</b> darf die Hand über das Netz, wenn der Kontakt im eigenen Raum war. <span class="r">11.1.2</span></li>
 </ul>
+<div data-widget="figReach"></div>
 <h3>Unter dem Netz</h3>
 <ul>
 <li>Eindringen in den gegnerischen Raum unter dem Netz ist erlaubt, wenn es den Gegner nicht behindert. <span class="r">11.2.1</span></li>
@@ -156,6 +159,7 @@ const CH = [
 <li>Andere Körperteile oberhalb der Füße dürfen das gegnerische Feld berühren, wenn sie nicht behindern. <span class="r">11.2.2.2</span></li>
 <li>Nach Ende des Ballwechsels darf man das gegnerische Feld betreten; die gegnerische Freizone jederzeit, solange man nicht behindert. <span class="r">11.2.3–11.2.4</span></li>
 </ul>
+<div data-widget="figUebertritt"></div>
 <h3>Netzberührung</h3>
 <ul>
 <li>Netzberührung <b>zwischen den Antennen während der Aktion des Ballspielens</b> ist ein Fehler. Die Aktion umfasst Absprung, Schlag oder Schlagversuch und die sichere Landung. <span class="r">11.3.1</span></li>
@@ -163,6 +167,7 @@ const CH = [
 <li>Pfosten, Seile und Netz <b>außerhalb der Antennen</b> berühren ist kein Fehler, solange es das Spiel nicht beeinflusst. <span class="r">11.3.2</span></li>
 <li>Wird das Netz durch den Ball gegen einen Gegner gedrückt, ist das kein Fehler. <span class="r">11.3.3</span></li>
 </ul>
+<div data-widget="figNet"></div>
 <div class="merke"><b>Merke</b> Fuß: ein Teil muss auf oder über der Mittellinie bleiben. Netz: nur zwischen den Antennen und nur in Aktion ist Berührung ein Fehler.</div>`
 },
 {
@@ -177,6 +182,7 @@ const CH = [
 <li>Zeit: <b>8 Sekunden</b> nach dem Pfiff. Aufschlag vor dem Pfiff: annulliert und wiederholt. <span class="r">12.4.4–12.4.5</span></li>
 <li>Gewinnt die aufschlagende Mannschaft, schlägt derselbe Spieler wieder auf. Gewinnt die annehmende, rotiert sie und der Spieler von II→I schlägt auf. <span class="r">12.2.2</span></li>
 </ul>
+<div data-widget="figServeFoot"></div>
 <h3>Aufschlagfehler</h3>
 <ul>
 <li>Beim Schlag: falsche Reihenfolge oder falsche Ausführung. Das führt zum Aufschlagwechsel, auch wenn der Gegner falsch steht. <span class="r">12.6.1</span></li>
@@ -187,6 +193,7 @@ const CH = [
 <li>Ein Sichtblock liegt vor, wenn Spieler der aufschlagenden Mannschaft durch Armschwenken, Springen, seitliches Bewegen oder Gruppenbildung verhindern, dass der Gegner <b>den Aufschlagschlag und die Flugbahn</b> sieht, bis der Ball die Netzebene erreicht. Ist eines davon sichtbar, ist es <b>kein</b> Sichtblock. <span class="r">12.5.1–12.5.2</span></li>
 <li>Vermutet der 1. SR absichtliches Abschirmen, kann er die Mannschaft über den Spielkapitän ermahnen. <span class="r">12.5.3</span></li>
 </ul>
+<div data-widget="figScreen"></div>
 <h3>Angriffsschlag</h3>
 <ul>
 <li>Jede Aktion, die den Ball Richtung Gegner spielt, außer Aufschlag und Block. Lob und Finte sind erlaubt, wenn der Ball sauber geschlagen wird. <span class="r">13.1.1–13.1.2</span></li>
@@ -195,6 +202,7 @@ const CH = [
 <li><b>Hinterspieler</b> dürfen in jeder Höhe angreifen, wenn sie <b>hinter der Angriffslinie</b> abspringen (Linie weder berührt noch übertreten). Landen dürfen sie in der Vorderzone. Aus der Vorderzone nur, wenn der Ball beim Kontakt <b>teilweise unter der Netzoberkante</b> ist. <span class="r">13.2.2–13.2.3</span></li>
 <li>Den gegnerischen <b>Aufschlag</b> in der Vorderzone vollständig über Netzhöhe angreifen: Fehler. <span class="r">13.2.4</span></li>
 </ul>
+<div data-widget="figBackrow"></div>
 <h3>Block</h3>
 <ul>
 <li>Block: Spieler nahe am Netz fangen den Ball vom Gegner ab, indem sie über die Netzoberkante reichen. Nur <b>Vorderspieler</b> dürfen blocken. <span class="r">14.1.1</span></li>
@@ -263,6 +271,7 @@ const CH = [
 <li>Kein <b>Aufschlag</b>, kein <b>Block</b>, kein <b>Blockversuch</b>. <span class="r">19.3.1.3</span></li>
 <li>Spielt er den Ball <b>mit den Fingern im oberen Zuspiel</b> in seiner <b>Vorderzone</b> (oder deren Verlängerung), darf ein Mitspieler diesen Ball nicht vollständig über Netzhöhe angreifen. Macht er dasselbe <b>hinter</b> der Vorderzone, ist der Angriff frei. <span class="r">19.3.1.4</span></li>
 </ul>
+<div data-widget="figLibero"></div>
 <h3>Libero-Austausch</h3>
 <ul>
 <li>Ist <b>kein Wechsel</b>, unbegrenzt oft möglich, aber zwischen zwei Austauschen muss ein <b>abgeschlossener Ballwechsel</b> liegen (Ausnahmen: eine Strafe lässt das Team rotieren und der Libero käme auf IV, oder der Libero wird spielunfähig). <span class="r">19.3.2.1</span></li>

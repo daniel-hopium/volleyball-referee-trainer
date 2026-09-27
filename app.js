@@ -167,7 +167,7 @@ function renderLernen() {
       <button type="button" class="btn ${P.ch[k] ? 'btn-ok' : 'btn-ghost'}" id="ch-toggle">${P.ch[k] ? 'Als verstanden markiert' : 'Als verstanden markieren'}</button>
       ${nextC ? `<button type="button" class="btn btn-primary" id="ch-next">Weiter: ${esc(nextC.t)}</button>` : ''}
     </div>`;
-  $$('#ch-body [data-widget]').forEach(el => { if (WIDGETS[el.dataset.widget]) WIDGETS[el.dataset.widget](el); });
+  $$('#ch-body [data-widget]').forEach(el => { const fn = WIDGETS[el.dataset.widget] || (window.SCHIRI_FIGS || {})[el.dataset.widget]; if (fn) fn(el); });
   runQuiz($('#ch-quiz'), shuffle(QS.filter(q => q.k === k)).slice(0, 3), { compact: true });
   $('#ch-toggle').addEventListener('click', () => { P.ch[k] = !P.ch[k]; save(); renderLernen(); });
   if (nextC) $('#ch-next').addEventListener('click', () => { P.ch[k] = true; P.lastCh = nextC.k; save(); renderLernen(); window.scrollTo(0, 0); });
