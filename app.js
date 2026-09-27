@@ -113,7 +113,7 @@ const ghost = pts => `<polyline points="${pl(pts)}" class="pf-ghost"/>`;
 const mv = (d, tip, a) => `<path d="${d}" class="pf-mot"/><polygon points="0,0 -8,-4.6 -8,4.6" class="pf-head-a" transform="translate(${tip[0]} ${tip[1]}) rotate(${a})"/>`;
 const card = (x, y, col, rot) => `<rect x="${x}" y="${y}" width="13" height="17" rx="1.5" fill="${col}" class="pf-card" transform="rotate(${rot} ${x + 6.5} ${y + 8.5})"/>`;
 const badge = (n, x, y) => `<circle cx="${x}" cy="${y}" r="10" class="pf-badge"/><text x="${x}" y="${y + 4.5}" class="pf-badge-t">${n}</text>`;
-const floorL = (x1, x2) => `<line x1="${x1}" y1="134" x2="${x2}" y2="134" class="pf-floor"/>`;
+const floorL = (x1, x2) => `<line x1="${x1}" y1="113" x2="${x2}" y2="113" class="pf-floor"/>`;
 const net = (x, y, w, h) => {
   let m = '';
   for (let i = x + 6; i < x + w; i += 6) m += `<line x1="${i}" y1="${y}" x2="${i}" y2="${y + h}" class="pf-mesh"/>`;
@@ -126,8 +126,8 @@ function fig(L, R, o = {}) {
   const a = s => arm(s[0], s[1]);
   const back = [L, R].filter(s => s[2] === 'back').map(a).join('');
   const front = [L, R].filter(s => s[2] !== 'back').map(a).join('');
-  return `<svg viewBox="0 0 120 140" class="pict" aria-hidden="true">${o.pre || ''}${back}
-<path d="M44 51 Q60 45 76 51 Q80 54 80 62 L81 140 L39 140 L40 62 Q40 54 44 51 Z" class="pf-shirt"/><path d="M54 46 L60 53 L66 46" class="pf-collar"/>
+  return `<svg viewBox="0 0 120 118" class="pict" aria-hidden="true">${o.pre || ''}${back}
+<path d="M44 51 Q60 45 76 51 Q80 54 80 62 L81 118 L39 118 L40 62 Q40 54 44 51 Z" class="pf-shirt"/><path d="M54 46 L60 53 L66 46" class="pf-collar"/>
 <circle cx="60" cy="31" r="13" class="pf-headc"/>${o.mid || ''}${front}${o.post || ''}</svg>`;
 }
 const L0 = [DN.L, 'fist'], R0 = [DN.R, 'fist'];
@@ -146,20 +146,20 @@ const PICT = {
   '11': () => fig([[[45, 56], [26, 56], [26, 32]], 'f4'], [[[75, 56], [94, 56], [94, 32]], 'f4'], { post: badge('8', 60, 9) }),
   '12': () => fig([[[45, 56], [38, 36], [36, 18]], 'palmV'], [[[75, 56], [82, 36], [84, 18]], 'palmV']),
   '13': () => fig(L0, [[[75, 56], [86, 84], [68, 94]], 'point'], { post: mv('M46 104 A20 8 0 1 0 74 88', [74, 88], -30) }),
-  '14': () => fig([[[45, 56], [30, 78], [18, 96]], 'open'], R0, { pre: floorL(2, 44) + '<line x1="12" y1="106" x2="8" y2="130" class="pf-dash"/>' }),
+  '14': () => fig([[[45, 56], [30, 78], [18, 96]], 'open'], R0, { pre: floorL(2, 44) + '<line x1="13" y1="104" x2="9" y2="110" class="pf-dash"/>' }),
   '15': () => fig([[[45, 56], [30, 80], [32, 52]], 'palmV'], [[[75, 56], [90, 80], [88, 52]], 'palmV'], { pre: ghost([[45, 56], [30, 80], [12, 90]]) + ghost([[75, 56], [90, 80], [108, 90]]), post: mv('M14 80 Q16 62 24 54', [24, 54], -60) + mv('M106 80 Q104 62 96 54', [96, 54], -120) }),
   '16': () => fig(L0, [[[75, 56], [82, 84], [102, 74]], 'palmH'], { mid: ghost([[75, 56], [82, 84], [98, 100]]), post: mv('M113 102 L113 70', [113, 70], -90) }),
   '17': () => fig(L0, [[[75, 56], [96, 50], [96, 28]], 'f2'], { post: badge('2', 18, 20) }),
   '18': () => fig(L0, [[[75, 56], [96, 50], [96, 28]], 'f4'], { post: badge('4', 18, 20) }),
   '19': () => fig(L0, [[[75, 56], [88, 64], [100, 60]], 'open'], { pre: net(96, 62, 24, 44) + '<line x1="117" y1="30" x2="117" y2="110" class="pf-antenna"/>' }),
-  '20': () => fig(L0, [[[75, 56], [92, 62], [106, 72]], 'palmH'], { pre: net(92, 84, 28, 36) }),
+  '20': () => fig(L0, [[[75, 56], [92, 62], [106, 72]], 'palmH'], { pre: net(92, 84, 28, 30) }),
   '21': () => fig(L0, [[[75, 56], [94, 36], [76, 24]], 'open'], { mid: ghost([[75, 56], [94, 36], [96, 10]]), post: mv('M104 10 Q112 30 90 32', [90, 32], 175) }),
-  '22': () => fig(L0, [[[75, 56], [86, 82], [96, 102]], 'point'], { pre: floorL(70, 118) + '<line x1="94" y1="134" x2="118" y2="134" class="pf-lineacc"/><line x1="104" y1="118" x2="108" y2="130" class="pf-dash"/>' }),
+  '22': () => fig(L0, [[[75, 56], [84, 76], [92, 90]], 'point'], { pre: floorL(70, 118) + '<line x1="92" y1="113" x2="118" y2="113" class="pf-lineacc"/><line x1="100" y1="103" x2="104" y2="110" class="pf-dash"/>' }),
   '23': () => fig([[[45, 56], [30, 82], [32, 58]], 'thumb'], [[[75, 56], [90, 82], [88, 58]], 'thumb']),
   '24': () => fig([[[45, 56], [72, 62], [92, 14]], 'palmH'], [[[75, 56], [100, 46], [98, 28]], 'palmV'], { post: mv('M80 6 Q96 -1 114 8', [114, 8], 25) }),
   '25': () => fig([[[45, 56], [70, 64], [90, 38]], 'none'], [[[75, 56], [100, 46], [96, 22]], 'fist'], { post: '<rect x="87" y="27" width="8" height="15" fill="var(--yellow)" class="pf-card"/><rect x="95" y="27" width="8" height="15" fill="var(--red)" class="pf-card"/>' }),
   'P': () => fig(L0, [[[75, 56], [94, 64], [106, 74]], 'point']),
-  'L1': () => fig(L0, [[[75, 56], [82, 82], [86, 104]], 'fist'], { post: flag(86, 104, 90, 126, true) }),
+  'L1': () => fig(L0, [[[75, 56], [84, 78], [92, 94]], 'fist'], { post: flag(92, 94, 98, 116, false) }),
   'L2': () => fig(L0, [[[75, 56], [80, 36], [82, 22]], 'fist'], { post: flag(82, 22, 82, 2) }),
   'L3': () => fig([[[45, 56], [38, 72], [66, 50]], 'palmH'], [[[75, 56], [88, 82], [70, 88]], 'fist'], { mid: flag(70, 88, 70, 52) }),
   'L4': () => fig([[[45, 56], [26, 56], [12, 52]], 'point'], [[[75, 56], [88, 34], [80, 18]], 'fist'], { post: flag(80, 18, 72, 2) + mv('M100 22 Q108 8 96 2', [96, 2], -150) }),

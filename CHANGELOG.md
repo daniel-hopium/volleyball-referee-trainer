@@ -39,5 +39,6 @@ Kategorien: **Neu** (neue Funktionen), **Verbessert** (bestehendes Verhalten), *
 - Regel-Coach, der Fragen über Claude beantwortet, wenn die Seite als Artifact läuft.
 
 ### Verbessert
+- Die Handzeichen-Figuren sind unten kürzer, der lange Oberkörper lenkte vom Zeichen ab.
 - Alle Handzeichen-Figuren sind neu gezeichnet, im Stil der FIVB-Diagramme: Oberkörper mit
   Trikot, Arme mit Ellbogen, Ausgangsstellung gestrichelt und Bewegung als Pfeil.
