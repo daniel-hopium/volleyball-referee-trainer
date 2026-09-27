@@ -54,7 +54,6 @@ const SCN = [
     look: 'Blick: vor dem Schlag auf die Füße des Aufschlägers, im Schlag auf den Ball.', r: 'Regel 12.4.3' }
 ];
 
-const REPLAY = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4v5h5"/></svg>';
 let played = false;
 let root = null, D = null, run = null, stats = { n: 0, time: 0, dec: 0 }, order = [], oi = 0, slow = false;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -98,7 +97,7 @@ function render() {
     <div class="row-btns pz-ctl">
       <button type="button" class="btn btn-primary" id="pz-play">Abspielen</button>
       <button type="button" class="btn pz-whistle" id="pz-whistle" disabled>Pfiff</button>
-      <button type="button" class="btn btn-ghost pz-replay" id="pz-replay" disabled title="Spielzug wiederholen">${REPLAY}<span>Wiederholen</span></button>
+      <button type="button" class="btn btn-ghost pz-replay" id="pz-replay" disabled title="Spielzug wiederholen">Wiederholen</button>
       <label class="toggle"><input type="checkbox" id="pz-slow"${slow ? ' checked' : ''}> Zeitlupe</label>
     </div>
     <p class="muted small">Drück „Pfiff“ (oder die Leertaste) genau dann, wenn der Ballwechsel zu Ende ist oder ein Fehler passiert. Nicht vorher.</p>
