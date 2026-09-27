@@ -9,12 +9,24 @@ Rules 2025–2028.
 - **Lernen:** zehn Kapitel mit Regelnummern, antippbarem Spielfeldplan, Wechsel-Simulator,
   Sanktionsskala und Zuständigkeits-Übung. Jedes Kapitel endet mit einem Schnell-Check.
 - **Handzeichen:** alle 25 Zeichen der Schiedsrichter und 5 Flaggenzeichen der
-  Linienrichter, als Übersicht, Karteikarten und Quiz.
+  Linienrichter, gezeichnet im Stil der offiziellen Diagramme (Ausgangsstellung gestrichelt,
+  Bewegung als Pfeil). Dazu gibt es Übersicht, Karteikarten und Quiz sowie eine Übung zur
+  Reihenfolge der Zeichen nach Regel 22.2.3 (1. SR, 2. SR, Doppelfehler).
 - **Aufstellung:** Spieler per Drag-and-Drop aufstellen, Positionsfehler finden und die
   Aufschlagfolge wie ein Schreiber verfolgen.
 - **Situationen:** 26 Spielszenen. Erst entscheiden, dann das richtige Handzeichen wählen.
+- **Praxis:**
+  - *Pfiff-Timing:* animierte Ballwechsel in der Seitenansicht. Im richtigen Moment pfeifen
+    (Knopf oder Leertaste), dann das Zeichen wählen. Dazu kommt ein Tipp, wohin der Blick
+    gehört.
+  - *Spielbericht:* ein Satzausschnitt wie im elektronischen Spielbericht. Punkte,
+    Auszeiten, Wechsel, unzulässige Anfragen und Sanktionen werden über die passende
+    Taste erfasst. Die Aufstellung und den Aufschläger kontrollierst du selbst.
 - **Quiz und Probeprüfung:** 130 Fragen mit Erklärung und Fehlerkartei, dazu eine
   Probeprüfung mit 30 Fragen in 30 Minuten.
+- **Wiederholung (Spaced Repetition):** Falsch beantwortete Fragen kommen nach 1, 3, 7,
+  14 und 30 Tagen wieder, richtig beantwortete nach 7 Tagen. Die Startseite zeigt, wie
+  viele Fragen heute fällig sind.
 - **Coach:** Fragen an Claude. Das funktioniert nur, wenn die Seite als Claude-Artifact
   läuft, sonst wird der Bereich ausgeblendet.
 
@@ -41,7 +53,9 @@ python -m http.server 8000
 | `index.html` | Seitenaufbau und Styles, heller und dunkler Modus |
 | `data.js` | Lerninhalte: Kapitel, Fragen, Handzeichen, Situationen |
 | `figures.js` | Erklärgrafiken „Erlaubt vs. Fehler“ als SVG, per `data-widget="fig…"` in die Kapitel eingebunden |
-| `app.js` | Logik: Navigation, Quiz, Prüfung, Trainer, Widgets, Coach |
+| `app.js` | Logik: Navigation, Quiz mit Wiederholung, Prüfung, Handzeichen-Figuren, Trainer, Widgets, Coach |
+| `scoresheet.js` | Spielbericht-Trainer (elektronischer Spielbericht) |
+| `plays.js` | Pfiff-Timing: animierte Ballwechsel |
 
 Neue Fragen kommen in `data.js` in das Array `Q`, im Format
 `[id, kapitel, frage, [4 optionen], richtigerIndex, erklärung, regel]`.

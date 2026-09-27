@@ -41,14 +41,28 @@ const KEY = 'schiri-trainer-v1';
 let P = { ch: {}, q: {}, sig: {}, sit: {}, exams: [], lastCh: 'feld' };
 try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) P = Object.assign(P, s); } catch (e) {}
 function save() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} }
-function recordQ(id, ok) { const s = P.q[id] || { r: 0, w: 0 }; ok ? s.r++ : s.w++; s.last = ok ? 1 : 0; P.q[id] = s; save(); }
+/* Wiederholung nach dem Leitner-Prinzip: falsch -> morgen, dann 3, 7, 14, 30 Tage. */
+const IVL = [1, 3, 7, 14, 30];
+const today = () => Math.floor((Date.now() - new Date().getTimezoneOffset() * 6e4) / 864e5);
+Object.values(P.q).forEach(s => { if (s.due == null) { s.lvl = s.last === 0 ? 0 : 2; s.due = s.last === 0 ? today() : today() + IVL[2]; } });
+function recordQ(id, ok) {
+  const s = P.q[id] || { r: 0, w: 0 }, d = today();
+  ok ? s.r++ : s.w++; s.last = ok ? 1 : 0;
+  if (!ok) { s.lvl = 0; s.due = d + IVL[0]; }
+  else if (s.due == null) { s.lvl = 2; s.due = d + IVL[2]; }
+  else if (s.due <= d) { s.lvl = Math.min((s.lvl || 0) + 1, IVL.length - 1); s.due = d + IVL[s.lvl]; }
+  P.q[id] = s; save();
+}
+const dueQs = () => { const d = today(); return QS.filter(q => P.q[q.id] && P.q[q.id].due <= d); };
 function recordSig(id, ok) { const s = P.sig[id] || { r: 0, w: 0 }; ok ? s.r++ : s.w++; s.last = ok ? 1 : 0; P.sig[id] = s; save(); }
 
 /* ---------- Navigation ---------- */
-const VIEWS = ['start', 'lernen', 'zeichen', 'aufstellung', 'situationen', 'quiz', 'pruefung', 'coach'];
+const VIEWS = ['start', 'lernen', 'zeichen', 'aufstellung', 'situationen', 'praxis', 'quiz', 'pruefung', 'coach'];
+let pendingDue = false;
 const onShow = {};
 function go(v) {
   if (!VIEWS.includes(v)) v = 'start';
+  if (v !== 'praxis' && window.SCHIRI_PLAYS) window.SCHIRI_PLAYS.pause();
   VIEWS.forEach(x => { $('#v-' + x).hidden = x !== v; });
   $$('.nav button').forEach(b => b.setAttribute('aria-current', b.dataset.view === v ? 'page' : 'false'));
   const btn = $('.nav button[data-view="' + v + '"]');
@@ -64,62 +78,95 @@ document.addEventListener('click', e => {
   e.preventDefault();
   const [v, arg] = g.dataset.goto.split(':');
   if (v === 'lernen' && arg) P.lastCh = arg;
+  if (v === 'quiz' && arg === 'due') pendingDue = true;
   go(v);
 });
 
 /* ---------- Piktogramme der Handzeichen ---------- */
-const LD = [[48, 46], [42, 68], [41, 90]];
 function arr(d, x, y, ang) {
   return `<path d="${d}" class="pf-mot"/><polygon points="0,0 -8,-4.5 -8,4.5" class="pf-head-a" transform="translate(${x} ${y}) rotate(${ang})"/>`;
 }
-const card = (x, y, col, rot) => `<rect x="${x}" y="${y}" width="12" height="16" rx="1.5" fill="${col}" class="pf-card" transform="rotate(${rot} ${x + 6} ${y + 8})"/>`;
-const badge = n => `<circle cx="104" cy="16" r="11" class="pf-badge"/><text x="104" y="21" class="pf-badge-t">${n}</text>`;
-const floorL = () => `<line x1="6" y1="134" x2="114" y2="134" class="pf-floor"/>`;
+/* Figuren im Stil der FIVB-Diagramme 11 und 12: Oberkörper von vorn, Trikot, Arme mit Ellbogen,
+   Ausgangsstellung blass, Bewegung als dunkler Pfeil. Koordinaten im Raster 120 × 140. */
+const DN = { L: [[45, 56], [40, 82], [39, 106]], R: [[75, 56], [80, 82], [81, 106]] };
+const angOf = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI;
+const skinLine = (x1, y1, x2, y2, w) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="pf-fo" stroke-width="${w + 2.4}"/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="pf-fi" stroke-width="${w}"/>`;
+function hand(p, a, type) {
+  const [x, y] = p, r = a * Math.PI / 180, dx = Math.cos(r), dy = Math.sin(r);
+  const c = (cx, cy) => [+(cx).toFixed(1), +(cy).toFixed(1)];
+  if (type === 'none') return '';
+  if (type === 'open') { const [cx, cy] = c(x + dx * 4, y + dy * 4); return `<ellipse cx="${cx}" cy="${cy}" rx="8" ry="4.8" transform="rotate(${a.toFixed(0)} ${cx} ${cy})" class="pf-skin"/>`; }
+  if (type === 'palmH') return `<ellipse cx="${x}" cy="${y - 1}" rx="8.5" ry="3.6" class="pf-skin"/>`;
+  if (type === 'palmV') return `<ellipse cx="${x}" cy="${y - 5}" rx="3.8" ry="8.5" class="pf-skin"/>`;
+  if (type === 'point') return skinLine(x, y, +(x + dx * 13).toFixed(1), +(y + dy * 13).toFixed(1), 2.8) + `<circle cx="${x}" cy="${y}" r="5.2" class="pf-skin"/>`;
+  if (type === 'thumb') return skinLine(x, y - 2, x, y - 14, 3.6) + `<circle cx="${x}" cy="${y}" r="5.6" class="pf-skin"/>`;
+  if (type[0] === 'f') {
+    const n = +type.slice(1); let s = '';
+    for (let i = 0; i < n; i++) { const t = (i - (n - 1) / 2) * 17 * Math.PI / 180; s += skinLine(x, y, +(x + Math.sin(t) * 13).toFixed(1), +(y - Math.cos(t) * 13).toFixed(1), 2.6); }
+    return s + `<circle cx="${x}" cy="${y}" r="5.4" class="pf-skin"/>`;
+  }
+  return `<circle cx="${x}" cy="${y}" r="5.4" class="pf-skin"/>`;
+}
+const pl = pts => pts.map(p => p.join(',')).join(' ');
+const arm = (pts, type = 'fist') => `<polyline points="${pl(pts)}" class="pf-sleeve-o"/><polyline points="${pl(pts)}" class="pf-sleeve"/>` + hand(pts[2], angOf(pts[1], pts[2]), type);
+const ghost = pts => `<polyline points="${pl(pts)}" class="pf-ghost"/>`;
+const mv = (d, tip, a) => `<path d="${d}" class="pf-mot"/><polygon points="0,0 -8,-4.6 -8,4.6" class="pf-head-a" transform="translate(${tip[0]} ${tip[1]}) rotate(${a})"/>`;
+const card = (x, y, col, rot) => `<rect x="${x}" y="${y}" width="13" height="17" rx="1.5" fill="${col}" class="pf-card" transform="rotate(${rot} ${x + 6.5} ${y + 8.5})"/>`;
+const badge = (n, x, y) => `<circle cx="${x}" cy="${y}" r="10" class="pf-badge"/><text x="${x}" y="${y + 4.5}" class="pf-badge-t">${n}</text>`;
+const floorL = (x1, x2) => `<line x1="${x1}" y1="134" x2="${x2}" y2="134" class="pf-floor"/>`;
 const net = (x, y, w, h) => {
   let m = '';
-  for (let i = x + 7; i < x + w; i += 7) m += `<line x1="${i}" y1="${y}" x2="${i}" y2="${y + h}" class="pf-mesh"/>`;
-  for (let j = y + 7; j < y + h; j += 7) m += `<line x1="${x}" y1="${j}" x2="${x + w}" y2="${j}" class="pf-mesh"/>`;
+  for (let i = x + 6; i < x + w; i += 6) m += `<line x1="${i}" y1="${y}" x2="${i}" y2="${y + h}" class="pf-mesh"/>`;
+  for (let j = y + 6; j < y + h; j += 6) m += `<line x1="${x}" y1="${j}" x2="${x + w}" y2="${j}" class="pf-mesh"/>`;
   return `<g>${m}<rect x="${x}" y="${y - 2}" width="${w}" height="5" class="pf-netband"/></g>`;
 };
-const flag = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="pf-stick"/><g transform="translate(${x2} ${y2})"><polygon points="0,0 18,0 0,14" fill="var(--red)"/><polygon points="18,0 18,14 0,14" fill="var(--yellow)"/></g>`;
-function fig(L, R, extra = '', before = '') {
-  const arm = pts => `<polyline points="${pts.map(p => p.join(',')).join(' ')}" class="pf-arm"/><circle cx="${pts[pts.length - 1][0]}" cy="${pts[pts.length - 1][1]}" r="4.8" class="pf-hand"/>`;
-  return `<svg viewBox="0 0 120 140" class="pict" aria-hidden="true">${before}<line x1="54" y1="84" x2="51" y2="130" class="pf-leg"/><line x1="66" y1="84" x2="69" y2="130" class="pf-leg"/><rect x="46" y="37" width="28" height="50" rx="11" class="pf-body"/><circle cx="60" cy="23" r="11" class="pf-body"/>${arm(L)}${arm(R)}${extra}</svg>`;
+const flag = (x1, y1, x2, y2, up = true) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="pf-stick"/><g transform="translate(${x2} ${y2 - (up ? 0 : 14)})"><rect width="19" height="14" fill="var(--red)" class="pf-card"/><polygon points="0,0 19,0 0,14" fill="var(--yellow)" opacity=".9"/></g>`;
+/* L, R: [Punkte, Handform, 'back' für Arm hinter dem Körper]; o.pre hinter allem, o.mid vor dem Trikot, o.post zuoberst */
+function fig(L, R, o = {}) {
+  const a = s => arm(s[0], s[1]);
+  const back = [L, R].filter(s => s[2] === 'back').map(a).join('');
+  const front = [L, R].filter(s => s[2] !== 'back').map(a).join('');
+  return `<svg viewBox="0 0 120 140" class="pict" aria-hidden="true">${o.pre || ''}${back}
+<path d="M44 51 Q60 45 76 51 Q80 54 80 62 L81 140 L39 140 L40 62 Q40 54 44 51 Z" class="pf-shirt"/><path d="M54 46 L60 53 L66 46" class="pf-collar"/>
+<circle cx="60" cy="31" r="13" class="pf-headc"/>${o.mid || ''}${front}${o.post || ''}</svg>`;
 }
+const L0 = [DN.L, 'fist'], R0 = [DN.R, 'fist'];
 const PICT = {
-  '1': () => fig(LD, [[72, 46], [90, 42], [108, 34]], arr('M96 18 Q116 20 114 44', 114, 44, 95)),
-  '2': () => fig(LD, [[72, 46], [92, 46], [112, 46]]),
-  '3': () => fig([[48, 46], [34, 60], [56, 70]], [[72, 46], [86, 56], [66, 48]], arr('M20 92 Q60 112 100 92', 100, 92, -27) + arr('M100 20 Q60 2 20 20', 20, 20, 155)),
-  '4': () => fig([[48, 46], [38, 66], [60, 64]], [[72, 46], [84, 58], [64, 40]], '<rect x="57" y="30" width="6" height="34" rx="3" class="pf-acc"/><rect x="44" y="25" width="32" height="6" rx="3" class="pf-acc"/>'),
-  '5': () => fig([[48, 46], [34, 64], [58, 58]], [[72, 46], [86, 66], [62, 70]], arr('M34 46 A28 16 0 0 1 86 46', 86, 46, 62) + arr('M86 82 A28 16 0 0 1 34 82', 34, 82, -118)),
-  '6a': () => fig(LD, [[72, 46], [86, 30], [90, 14]], card(84, 0, 'var(--yellow)', 8)),
-  '6b': () => fig(LD, [[72, 46], [86, 30], [90, 14]], card(84, 0, 'var(--red)', 8)),
-  '7': () => fig(LD, [[72, 46], [86, 30], [90, 14]], card(80, 2, 'var(--yellow)', -10) + card(88, 0, 'var(--red)', 10)),
-  '8': () => fig([[48, 46], [34, 30], [30, 14]], [[72, 46], [86, 30], [90, 14]], card(24, 0, 'var(--yellow)', -8) + card(84, 0, 'var(--red)', 8)),
-  '9': () => fig([[48, 46], [40, 72], [78, 50]], [[72, 46], [80, 72], [42, 50]]),
-  '10': () => fig(LD, [[72, 46], [90, 40], [104, 30]], '<line x1="96" y1="24" x2="113" y2="24" class="pf-palm"/>' + arr('M114 62 L114 38', 114, 38, -90)),
-  '11': () => fig([[48, 46], [34, 50], [32, 28]], [[72, 46], [86, 50], [88, 30]], badge('8')),
-  '12': () => fig([[48, 46], [45, 26], [44, 6]], [[72, 46], [75, 26], [76, 6]]),
-  '13': () => fig(LD, [[72, 46], [88, 58], [92, 38]], '<path d="M92 28 A9 9 0 1 1 102 20" class="pf-mot"/>' + '<polygon points="0,0 -7,-4 -7,4" class="pf-head-a" transform="translate(103 21) rotate(40)"/>'),
-  '14': () => fig(LD, [[72, 46], [88, 62], [102, 80]], floorL() + '<line x1="105" y1="86" x2="111" y2="128" class="pf-dash"/>'),
-  '15': () => fig([[48, 46], [36, 66], [36, 40]], [[72, 46], [84, 66], [84, 40]]),
-  '16': () => fig(LD, [[72, 46], [86, 72], [104, 64]], '<line x1="97" y1="59" x2="112" y2="59" class="pf-palm"/>' + arr('M114 82 L114 56', 114, 56, -90)),
-  '17': () => fig(LD, [[72, 46], [86, 50], [90, 30]], badge('2')),
-  '18': () => fig(LD, [[72, 46], [86, 50], [90, 30]], badge('4')),
-  '19': () => fig(LD, [[72, 46], [86, 62], [96, 60]], '', net(92, 60, 26, 36)),
-  '20': () => fig(LD, [[72, 46], [88, 50], [100, 62]], '<line x1="93" y1="66" x2="110" y2="66" class="pf-palm"/>', net(88, 80, 30, 30)),
-  '21': () => fig(LD, [[72, 46], [88, 34], [100, 22]], arr('M110 20 Q120 40 110 60', 110, 60, 112)),
-  '22': () => fig(LD, [[72, 46], [88, 64], [100, 82]], floorL() + '<line x1="92" y1="134" x2="118" y2="134" class="pf-lineacc"/><line x1="103" y1="88" x2="106" y2="128" class="pf-dash"/>'),
-  '23': () => fig([[48, 46], [36, 66], [38, 46]], [[72, 46], [84, 66], [82, 46]], '<line x1="38" y1="40" x2="38" y2="28" class="pf-thumb"/><line x1="82" y1="40" x2="82" y2="28" class="pf-thumb"/>'),
-  '24': () => fig([[48, 46], [40, 66], [56, 44]], [[72, 46], [88, 56], [68, 30]], '<line x1="56" y1="42" x2="56" y2="26" class="pf-thumb"/>' + arr('M62 20 L84 14', 84, 14, -15)),
-  '25': () => fig([[48, 46], [40, 68], [64, 62]], [[72, 46], [86, 66], [70, 56]], '<rect x="56" y="46" width="8" height="18" fill="var(--yellow)" class="pf-card"/><rect x="64" y="46" width="8" height="18" fill="var(--red)" class="pf-card"/>'),
-  'L1': () => fig(LD, [[72, 46], [86, 66], [94, 84]], flag(94, 84, 102, 108)),
-  'L2': () => fig(LD, [[72, 46], [84, 36], [86, 24]], flag(86, 24, 86, 2)),
-  'L3': () => fig([[48, 46], [66, 26], [84, 6]], [[72, 46], [84, 36], [86, 24]], flag(86, 24, 86, 4)),
-  'L4': () => fig([[48, 46], [30, 50], [12, 56]], [[72, 46], [76, 26], [72, 12]], flag(72, 12, 88, 0) + '<path d="M96 22 Q106 14 104 4" class="pf-mot"/><path d="M58 4 Q52 12 58 20" class="pf-mot"/>'),
-  'L5': () => fig([[48, 46], [40, 72], [78, 50]], [[72, 46], [80, 72], [42, 50]], flag(42, 50, 24, 70))
+  '1': () => fig(L0, [[[75, 56], [94, 58], [110, 58]], 'open'], { mid: ghost([[75, 56], [74, 80], [54, 88]]), post: mv('M52 100 Q84 108 108 74', [108, 74], -58) }),
+  '2': () => fig(L0, [[[75, 56], [94, 54], [110, 52]], 'open']),
+  '3': () => fig([[[45, 56], [32, 76], [60, 82]], 'fist'], [[[75, 56], [90, 72], [72, 84]], 'fist', 'back'], { post: mv('M24 94 Q60 116 98 92', [98, 92], -35) + mv('M96 36 Q60 20 26 38', [26, 38], 150) }),
+  '4': () => fig([[[45, 56], [32, 64], [52, 48]], 'none'], [[[75, 56], [84, 82], [62, 72]], 'none'], { post: '<ellipse cx="62" cy="61" rx="4" ry="11" class="pf-skin"/><ellipse cx="62" cy="48" rx="12" ry="4" class="pf-skin"/>' + mv('M86 36 L112 36', [112, 36], 0) }),
+  '5': () => fig([[[45, 56], [32, 74], [68, 72]], 'fist'], [[[75, 56], [88, 90], [52, 90]], 'fist'], { post: mv('M36 66 A26 12 0 0 1 86 70', [86, 70], 55) + mv('M86 98 A26 12 0 0 1 34 96', [34, 96], -125) }),
+  '6a': () => fig(L0, [[[75, 56], [96, 46], [94, 24]], 'fist'], { post: card(88, 3, 'var(--yellow)', 8) }),
+  '6b': () => fig(L0, [[[75, 56], [96, 46], [94, 24]], 'fist'], { post: card(88, 3, 'var(--red)', 8) }),
+  '7': () => fig(L0, [[[75, 56], [96, 46], [94, 24]], 'fist'], { post: card(83, 4, 'var(--yellow)', -10) + card(92, 3, 'var(--red)', 10) }),
+  '8': () => fig([[[45, 56], [24, 46], [26, 24]], 'fist'], [[[75, 56], [96, 46], [94, 24]], 'fist'], { post: card(15, 3, 'var(--yellow)', -8) + card(88, 3, 'var(--red)', 8) }),
+  '9': () => fig([[[45, 56], [40, 86], [76, 68]], 'open'], [[[75, 56], [80, 86], [44, 68]], 'open']),
+  '10': () => fig(L0, [[[75, 56], [92, 62], [106, 58]], 'palmH'], { mid: ghost([[75, 56], [90, 76], [100, 94]]), post: mv('M114 98 L114 66', [114, 66], -90) }),
+  '11': () => fig([[[45, 56], [26, 56], [26, 32]], 'f4'], [[[75, 56], [94, 56], [94, 32]], 'f4'], { post: badge('8', 60, 9) }),
+  '12': () => fig([[[45, 56], [38, 36], [36, 18]], 'palmV'], [[[75, 56], [82, 36], [84, 18]], 'palmV']),
+  '13': () => fig(L0, [[[75, 56], [86, 84], [68, 94]], 'point'], { post: mv('M46 104 A20 8 0 1 0 74 88', [74, 88], -30) }),
+  '14': () => fig([[[45, 56], [30, 78], [18, 96]], 'open'], R0, { pre: floorL(2, 44) + '<line x1="12" y1="106" x2="8" y2="130" class="pf-dash"/>' }),
+  '15': () => fig([[[45, 56], [30, 80], [32, 52]], 'palmV'], [[[75, 56], [90, 80], [88, 52]], 'palmV'], { pre: ghost([[45, 56], [30, 80], [12, 90]]) + ghost([[75, 56], [90, 80], [108, 90]]), post: mv('M14 80 Q16 62 24 54', [24, 54], -60) + mv('M106 80 Q104 62 96 54', [96, 54], -120) }),
+  '16': () => fig(L0, [[[75, 56], [82, 84], [102, 74]], 'palmH'], { mid: ghost([[75, 56], [82, 84], [98, 100]]), post: mv('M113 102 L113 70', [113, 70], -90) }),
+  '17': () => fig(L0, [[[75, 56], [96, 50], [96, 28]], 'f2'], { post: badge('2', 18, 20) }),
+  '18': () => fig(L0, [[[75, 56], [96, 50], [96, 28]], 'f4'], { post: badge('4', 18, 20) }),
+  '19': () => fig(L0, [[[75, 56], [88, 64], [100, 60]], 'open'], { pre: net(96, 62, 24, 44) + '<line x1="117" y1="30" x2="117" y2="110" class="pf-antenna"/>' }),
+  '20': () => fig(L0, [[[75, 56], [92, 62], [106, 72]], 'palmH'], { pre: net(92, 84, 28, 36) }),
+  '21': () => fig(L0, [[[75, 56], [94, 36], [76, 24]], 'open'], { mid: ghost([[75, 56], [94, 36], [96, 10]]), post: mv('M104 10 Q112 30 90 32', [90, 32], 175) }),
+  '22': () => fig(L0, [[[75, 56], [86, 82], [96, 102]], 'point'], { pre: floorL(70, 118) + '<line x1="94" y1="134" x2="118" y2="134" class="pf-lineacc"/><line x1="104" y1="118" x2="108" y2="130" class="pf-dash"/>' }),
+  '23': () => fig([[[45, 56], [30, 82], [32, 58]], 'thumb'], [[[75, 56], [90, 82], [88, 58]], 'thumb']),
+  '24': () => fig([[[45, 56], [72, 62], [92, 14]], 'palmH'], [[[75, 56], [100, 46], [98, 28]], 'palmV'], { post: mv('M80 6 Q96 -1 114 8', [114, 8], 25) }),
+  '25': () => fig([[[45, 56], [70, 64], [90, 38]], 'none'], [[[75, 56], [100, 46], [96, 22]], 'fist'], { post: '<rect x="87" y="27" width="8" height="15" fill="var(--yellow)" class="pf-card"/><rect x="95" y="27" width="8" height="15" fill="var(--red)" class="pf-card"/>' }),
+  'P': () => fig(L0, [[[75, 56], [94, 64], [106, 74]], 'point']),
+  'L1': () => fig(L0, [[[75, 56], [82, 82], [86, 104]], 'fist'], { post: flag(86, 104, 90, 126, true) }),
+  'L2': () => fig(L0, [[[75, 56], [80, 36], [82, 22]], 'fist'], { post: flag(82, 22, 82, 2) }),
+  'L3': () => fig([[[45, 56], [38, 72], [66, 50]], 'palmH'], [[[75, 56], [88, 82], [70, 88]], 'fist'], { mid: flag(70, 88, 70, 52) }),
+  'L4': () => fig([[[45, 56], [26, 56], [12, 52]], 'point'], [[[75, 56], [88, 34], [80, 18]], 'fist'], { post: flag(80, 18, 72, 2) + mv('M100 22 Q108 8 96 2', [96, 2], -150) }),
+  'L5': () => fig([[[45, 56], [42, 86], [76, 68]], 'open'], [[[75, 56], [78, 86], [44, 68]], 'fist'], { post: flag(44, 68, 24, 40) })
 };
 const pict = id => (PICT[id] ? PICT[id]() : '');
+window.SCHIRI_PICT = pict;
 
 /* ---------- Start ---------- */
 function renderStart() {
@@ -141,6 +188,15 @@ function renderStart() {
   $('#next-step').innerHTML = next
     ? `<p class="eyebrow">Als Nächstes</p><p class="next-t">Kapitel ${CHMAP[next.k].i + 1}: ${esc(next.t)}</p><p class="muted">${esc(next.s)}</p><button type="button" class="btn btn-primary" data-goto="lernen:${next.k}">Kapitel öffnen</button>`
     : `<p class="eyebrow">Alle Kapitel erledigt</p><p class="next-t">Zeit für eine Probeprüfung</p><p class="muted">30 Fragen, 30 Minuten, gemischt aus allen Kapiteln.</p><button type="button" class="btn btn-primary" data-goto="pruefung">Prüfung starten</button>`;
+  const due = dueQs().length, d = today();
+  const planned = QS.map(q => P.q[q.id]).filter(s => s && s.due > d).map(s => s.due);
+  const nextDue = planned.length ? Math.min.apply(null, planned) : null;
+  const nextN = planned.filter(x => x === nextDue).length;
+  const inDays = n => n === 1 ? 'morgen' : `in ${n} Tagen`;
+  $('#due-card').hidden = !due && nextDue == null;
+  $('#due-card').innerHTML = due
+    ? `<div><p class="eyebrow">Wiederholung</p><p class="due-t">Heute fällig: <b>${due}</b> ${due === 1 ? 'Frage' : 'Fragen'}</p><p class="muted small">Falsch beantwortete Fragen kommen nach 1, 3 und 7 Tagen wieder. Sitzt eine Frage, werden die Abstände länger.</p></div><button type="button" class="btn btn-primary" data-goto="quiz:due">Jetzt wiederholen</button>`
+    : nextDue != null ? `<div><p class="eyebrow">Wiederholung</p><p class="due-t">Heute ist nichts fällig.</p><p class="muted small">Nächste Wiederholung ${inDays(nextDue - d)}: ${nextN} ${nextN === 1 ? 'Frage' : 'Fragen'}.</p></div>` : '';
   $('#last-exam').innerHTML = last
     ? `Letzte Probeprüfung: <b>${Math.round(last.s / last.n * 100)} %</b> (${last.s} von ${last.n}) am ${new Date(last.d).toLocaleDateString('de-AT')}`
     : 'Noch keine Probeprüfung gemacht.';
@@ -230,11 +286,13 @@ function pickQs(pool, n) {
 let quizCh = 'alle', quizN = 10;
 function renderQuizSetup() {
   const wrongN = QS.filter(q => P.q[q.id] && P.q[q.id].last === 0).length;
+  const dueN = dueQs().length;
   const seen = QS.filter(q => P.q[q.id]).length;
   $('#quiz-setup').innerHTML = `
     <div class="setup-row"><span class="lbl">Kapitel</span><div class="chips">${[['alle', 'Alle']].concat(D.CH.map(c => [c.k, c.t])).map(([k, t]) => `<button type="button" class="chip${quizCh === k ? ' on' : ''}" data-k="${k}">${esc(t)}</button>`).join('')}</div></div>
     <div class="setup-row"><span class="lbl">Anzahl</span><div class="chips">${[10, 20].map(n => `<button type="button" class="chip${quizN === n ? ' on' : ''}" data-n="${n}">${n} Fragen</button>`).join('')}</div></div>
     <div class="setup-row actions"><button type="button" class="btn btn-primary" id="quiz-go">Runde starten</button>
+    <button type="button" class="btn btn-ghost" id="quiz-due"${dueN ? '' : ' disabled'}>Heute fällig (${dueN})</button>
     <button type="button" class="btn btn-ghost" id="quiz-wrong"${wrongN ? '' : ' disabled'}>Fehlerkartei üben (${wrongN})</button>
     <span class="muted small">${seen} von ${QS.length} Fragen schon gesehen. Neue und falsch beantwortete kommen zuerst.</span></div>`;
   $$('#quiz-setup [data-k]').forEach(b => b.addEventListener('click', () => { quizCh = b.dataset.k; renderQuizSetup(); }));
@@ -244,13 +302,24 @@ function renderQuizSetup() {
     runQuiz($('#quiz-run'), pickQs(pool, quizN), { onDone: renderQuizSetup });
     $('#quiz-run').scrollIntoView({ block: 'start' });
   });
+  $('#quiz-due').addEventListener('click', startDue);
   $('#quiz-wrong').addEventListener('click', () => {
     const pool = QS.filter(q => P.q[q.id] && P.q[q.id].last === 0);
     runQuiz($('#quiz-run'), shuffle(pool).slice(0, 20), { onDone: renderQuizSetup });
     $('#quiz-run').scrollIntoView({ block: 'start' });
   });
 }
-onShow.quiz = () => { renderQuizSetup(); if (!$('#quiz-run').innerHTML.trim()) $('#quiz-run').innerHTML = '<p class="muted placeholder">Wähle oben ein Kapitel und starte eine Runde.</p>'; };
+function startDue() {
+  const pool = dueQs();
+  if (!pool.length) return;
+  runQuiz($('#quiz-run'), shuffle(pool).slice(0, 20), { onDone: renderQuizSetup, againLabel: 'Zurück zur Auswahl', onAgain: () => { $('#quiz-run').innerHTML = ''; renderQuizSetup(); } });
+  $('#quiz-run').scrollIntoView({ block: 'start' });
+}
+onShow.quiz = () => {
+  renderQuizSetup();
+  if (pendingDue) { pendingDue = false; startDue(); return; }
+  if (!$('#quiz-run').innerHTML.trim()) $('#quiz-run').innerHTML = '<p class="muted placeholder">Wähle oben ein Kapitel und starte eine Runde.</p>';
+};
 
 /* ---------- Probeprüfung ---------- */
 let EX = null;
@@ -339,12 +408,14 @@ function renderZeichen() {
   if (sigMode === 'alle') {
     const list = D.SIG.filter(s => sigFilter === 'sr' ? s.who !== 'L' : s.who === 'L');
     box.innerHTML = `<div class="chips sig-filter"><button type="button" class="chip${sigFilter === 'sr' ? ' on' : ''}" data-f="sr">Schiedsrichter (${D.SIG.filter(s => s.who !== 'L').length})</button><button type="button" class="chip${sigFilter === 'l' ? ' on' : ''}" data-f="l">Linienrichter (5)</button></div>
-      <p class="muted small">Die Figuren sind vereinfachte Skizzen. Maßgeblich ist die Beschreibung aus dem Regelwerk (Diagramm 11 und 12).</p>
+      <p class="muted small">So liest du die Figuren: gestrichelt ist die Ausgangsstellung, der Pfeil zeigt die Bewegung. Tippe ein Zeichen an, dann kommst du auch direkt zum Original-Diagramm im Regelwerk.</p>
       <div class="sig-grid">${list.map(s => `<button type="button" class="sigcard" data-id="${s.id}">${pict(s.id)}<span class="sig-no">${s.id.replace('L', 'LR ')}</span><span class="sig-n">${esc(s.n)}</span>${P.sig[s.id] && P.sig[s.id].last === 1 ? '<span class="sig-ok" aria-label="sicher"></span>' : ''}</button>`).join('')}</div>`;
     $$('.sig-filter .chip', box).forEach(b => b.addEventListener('click', () => { sigFilter = b.dataset.f; renderZeichen(); }));
     $$('.sigcard', box).forEach(b => b.addEventListener('click', () => openSig(b.dataset.id)));
   } else if (sigMode === 'karten') {
     flashNext();
+  } else if (sigMode === 'folge') {
+    seqStart();
   } else {
     sigQuizStart();
   }
@@ -419,6 +490,71 @@ function sigQuizStep() {
     fb.innerHTML = `<p class="fb-h">${ok ? 'Richtig.' : 'Richtig wäre: ' + esc(s.n)}</p><p>${esc(s.d)}</p><div class="fb-row"><span class="r">${WHO[s.who]} · Regel ${esc(s.r)}</span><button type="button" class="btn btn-primary btn-s" id="sq-next">Weiter</button></div>`;
     $('#sq-next').addEventListener('click', () => { box.dataset.lock = ''; sq.i++; sigQuizStep(); });
   }));
+}
+/* Reihenfolge der Zeichen nach Regel 22.2.3 */
+const SEQ = [
+  { w: 'F', f: '18', p: false, srv: 'Heim', t: 'Gast spielt den Ball viermal, bevor er über das Netz geht.' },
+  { w: 'F', f: '17', p: true, srv: 'Gast', t: 'Heim-Spieler Nr. 5 berührt den Ball beim Zuspiel (zweite Berührung) zweimal hintereinander.' },
+  { w: 'F', f: '16', p: true, srv: 'Heim', t: 'Der Zuspieler von Gast (Nr. 3) fängt den Ball kurz und wirft ihn weiter.' },
+  { w: 'F', f: '15', p: false, srv: 'Gast', t: 'Ein Angriff von Heim landet klar hinter der Grundlinie. Niemand von Gast hat den Ball berührt.' },
+  { w: 'F', f: '20', p: true, srv: 'Gast', t: 'Heim-Blocker Nr. 8 greift über das Netz und spielt den Ball, bevor Gast angreifen konnte.' },
+  { w: 'S', f: '19', p: true, srv: 'Heim', t: 'Gast-Blocker Nr. 11 berührt beim Landen das Netz zwischen den Antennen.' },
+  { w: 'S', f: '22', p: true, srv: 'Gast', t: 'Heim-Spieler Nr. 9 tritt mit dem ganzen Fuß über die Mittellinie ins gegnerische Feld.' },
+  { w: 'S', f: '13', p: true, srv: 'Heim', t: 'Heim schlägt auf. Bei Gast haben Nr. 4 und Nr. 10 die Plätze getauscht, die Rotationsordnung stimmt nicht.' },
+  { w: 'D', f: '23', p: 'opt', srv: 'Heim', t: 'Heim hat Aufschlag. Im Ballwechsel berühren zwei Gegenspieler gleichzeitig das Netz zwischen den Antennen.' },
+  { w: 'D', f: '23', p: 'opt', srv: 'Gast', t: 'Gast hat Aufschlag. Zwei Gegenspieler begehen im selben Moment einen Fehler.' }
+];
+const SEQ_POOL = ['12', '13', '14', '15', '16', '17', '18', '20', '21', '22', '24'];
+let SQ = null;
+function seqStart() { SQ = { order: shuffle(SEQ.map((s, i) => i)), i: 0, r: 0, pick: [], tiles: null, done: false }; seqStep(); }
+function seqWant(s) {
+  const pl = s.p === true ? ['P'] : [];
+  return s.w === 'F' ? ['T', s.f].concat(pl) : [s.f].concat(pl, ['T']);
+}
+function seqTile(id, s) {
+  if (id === 'T') return { h: pict('2'), l: `Aufschlagende Mannschaft (${s.srv})` };
+  if (id === 'P') return { h: pict('P'), l: 'Auf den Spieler zeigen' };
+  return { h: pict(id), l: SIGMAP[id].n };
+}
+function seqStep() {
+  const box = $('#sig-body');
+  if (SQ.i >= SQ.order.length) {
+    box.innerHTML = `<div class="qsum"><p class="qsum-v">${SQ.r}<small>/${SQ.order.length}</small></p><div><p class="fb-h">${SQ.r >= 8 ? 'Die Reihenfolge sitzt.' : 'Merksatz: Der 1. SR beginnt mit der Mannschaft, der 2. SR endet mit ihr.'}</p><button type="button" class="btn btn-primary" id="seq-again">Neue Runde</button></div></div>`;
+    $('#seq-again').addEventListener('click', seqStart);
+    return;
+  }
+  const s = SEQ[SQ.order[SQ.i]];
+  if (!SQ.tiles) SQ.tiles = shuffle(['T', 'P', s.f].concat(shuffle(SEQ_POOL.filter(x => x !== s.f)).slice(0, 2)));
+  const who = s.w === 'F' ? 'Der 1. SR pfeift' : s.w === 'S' ? 'Der 2. SR pfeift' : 'Doppelfehler';
+  const whose = s.w === 'S' ? 'des 2. SR' : 'des 1. SR';
+  box.innerHTML = `<div class="qcard seq">
+    <div class="q-meta"><span>Aufgabe ${SQ.i + 1} von ${SQ.order.length}</span><span>${SQ.r} richtig</span></div>
+    <p class="eyebrow">${who}</p><p class="q-text">${esc(s.t)}</p>
+    <p class="muted small">Tippe die Zeichen ${whose} in der richtigen Reihenfolge an. Nicht jede Karte gehört dazu. Eine gewählte Karte tippst du zum Entfernen noch einmal an.</p>
+    <ol class="seq-slots" aria-label="Deine Reihenfolge">${SQ.pick.length ? SQ.pick.map((id, k) => { const t = seqTile(id, s); return `<li><button type="button" class="seq-tile on" data-k="${k}">${t.h}<span>${esc(t.l)}</span></button></li>`; }).join('') : '<li class="seq-empty">Noch nichts gewählt</li>'}</ol>
+    <div class="seq-pool">${SQ.tiles.filter(id => !SQ.pick.includes(id)).map(id => { const t = seqTile(id, s); return `<button type="button" class="seq-tile" data-id="${id}">${t.h}<span>${esc(t.l)}</span></button>`; }).join('')}</div>
+    <div class="row-btns"><button type="button" class="btn btn-primary" id="seq-check"${SQ.pick.length ? '' : ' disabled'}>Prüfen</button></div>
+    <div class="fb" hidden></div></div>`;
+  $$('.seq-pool .seq-tile', box).forEach(b => b.addEventListener('click', () => { if (SQ.done) return; SQ.pick.push(b.dataset.id); seqStep(); }));
+  $$('.seq-slots .seq-tile', box).forEach(b => b.addEventListener('click', () => { if (SQ.done) return; SQ.pick.splice(+b.dataset.k, 1); seqStep(); }));
+  $('#seq-check').addEventListener('click', () => {
+    const want = seqWant(s), got = SQ.pick.join(',');
+    const ok = got === want.join(',') || (s.p === 'opt' && got === [s.f, 'P', 'T'].join(','));
+    SQ.done = true; if (ok) SQ.r++;
+    recordSig(s.f, ok);
+    $$('.seq-tile', box).forEach(x => { x.disabled = true; });
+    $('#seq-check').hidden = true;
+    const fb = $('.fb', box);
+    const wantTxt = want.map(id => seqTile(id, s).l).join(' → ');
+    const why = s.w === 'F' ? 'Pfeift der 1. SR, zeigt er zuerst die aufschlagende Mannschaft, dann die Art des Fehlers und, wenn nötig, den Spieler.'
+      : s.w === 'S' ? 'Pfeift der 2. SR, zeigt er zuerst die Art des Fehlers, dann den Spieler und zuletzt die aufschlagende Mannschaft, und zwar erst, nachdem der 1. SR sie angezeigt hat. Der 1. SR zeigt in diesem Fall nur die aufschlagende Mannschaft.'
+      : 'Beim Doppelfehler zeigen beide SR zuerst die Art des Fehlers (Doppelfehler) und, wenn nötig, die Spieler. Erst dann zeigt der 1. SR die Mannschaft, die aufschlägt. Der Ballwechsel wird wiederholt, es schlägt also dieselbe Mannschaft noch einmal auf.';
+    const pl = s.p === true ? '' : s.p === false ? ' Einen Spieler zeigst du hier nicht, weil der Fehler nicht an einem einzelnen Spieler hängt.' : ' Die Spieler zu zeigen ist hier optional.';
+    fb.hidden = false; fb.className = 'fb ' + (ok ? 'fb-ok' : 'fb-bad');
+    fb.innerHTML = `<p class="fb-h">${ok ? 'Richtig.' : 'Richtig wäre: ' + esc(wantTxt)}</p><p>${why}${pl}</p><div class="fb-row">${rulePill(s.w === 'F' ? 'Regel 22.2.3.1' : s.w === 'S' ? 'Regel 22.2.3.2' : 'Regel 22.2.3.4, 6.1.2.2')}<button type="button" class="btn btn-primary btn-s" id="seq-next">Weiter</button></div>`;
+    $('#seq-next').addEventListener('click', () => { SQ.i++; SQ.pick = []; SQ.tiles = null; SQ.done = false; seqStep(); });
+    $('#seq-next').focus();
+  });
 }
 $$('#sig-modes button').forEach(b => b.addEventListener('click', () => { sigMode = b.dataset.m; renderZeichen(); }));
 onShow.zeichen = renderZeichen;
@@ -624,6 +760,18 @@ $$('#aufst-tabs button').forEach(b => b.addEventListener('click', () => {
   $('#so-wrap').hidden = b.dataset.t !== 'so';
 }));
 onShow.aufstellung = () => { renderPos(); if (!SO) soNew(); };
+
+/* ---------- Praxis: Pfiff-Timing und elektronischer Spielbericht ---------- */
+let praxisTab = 'pfiff';
+function renderPraxis() {
+  $$('#praxis-tabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === praxisTab));
+  $('#pfiff-wrap').hidden = praxisTab !== 'pfiff';
+  $('#sheet-wrap').hidden = praxisTab !== 'sheet';
+  if (praxisTab === 'pfiff') { if (!$('#pfiff-body').innerHTML.trim()) window.SCHIRI_PLAYS.mount($('#pfiff-body')); }
+  else { window.SCHIRI_PLAYS.pause(); if (!$('#sheet-body').innerHTML.trim()) window.SCHIRI_SHEET.mount($('#sheet-body')); }
+}
+$$('#praxis-tabs button').forEach(b => b.addEventListener('click', () => { praxisTab = b.dataset.t; renderPraxis(); }));
+onShow.praxis = renderPraxis;
 
 /* ---------- Widgets in den Kapiteln ---------- */
 const ZONES = {
