@@ -12,6 +12,9 @@ Kategorien: **Neu** (neue Funktionen), **Verbessert** (bestehendes Verhalten), *
 ## Unveröffentlicht
 
 ### Neu
+- **Fortschritt auf mehreren Geräten:** Anmeldung per E-Mail-Link, danach wird der Stand
+  über Supabase zwischen Handy und PC abgeglichen. Bei jeder Frage gewinnt der neuere Stand,
+  „Zurücksetzen“ wirkt überall. Ohne eingetragenes Supabase-Projekt bleibt alles lokal.
 - Praxis-Bereich mit **Pfiff-Timing**: acht animierte Ballwechsel. Man pfeift im richtigen
   Moment, bekommt die Reaktionszeit angezeigt und wählt dann das Handzeichen. Zu frühes
   Pfeifen wird erkannt.

@@ -40,25 +40,28 @@ new MutationObserver(() => linkRules(document)).observe(document.body, { childLi
 const KEY = 'schiri-trainer-v1';
 let P = { ch: {}, q: {}, sig: {}, sit: {}, exams: [], lastCh: 'feld' };
 try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) P = Object.assign(P, s); } catch (e) {}
-function save() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} }
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {}
+  if (window.SCHIRI_SYNC) window.SCHIRI_SYNC.changed();
+}
 /* Wiederholung nach dem Leitner-Prinzip: falsch -> morgen, dann 3, 7, 14, 30 Tage. */
 const IVL = [1, 3, 7, 14, 30];
 const today = () => Math.floor((Date.now() - new Date().getTimezoneOffset() * 6e4) / 864e5);
 Object.values(P.q).forEach(s => { if (s.due == null) { s.lvl = s.last === 0 ? 0 : 2; s.due = s.last === 0 ? today() : today() + IVL[2]; } });
 function recordQ(id, ok) {
   const s = P.q[id] || { r: 0, w: 0 }, d = today();
-  ok ? s.r++ : s.w++; s.last = ok ? 1 : 0;
+  ok ? s.r++ : s.w++; s.last = ok ? 1 : 0; s.t = Date.now();
   if (!ok) { s.lvl = 0; s.due = d + IVL[0]; }
   else if (s.due == null) { s.lvl = 2; s.due = d + IVL[2]; }
   else if (s.due <= d) { s.lvl = Math.min((s.lvl || 0) + 1, IVL.length - 1); s.due = d + IVL[s.lvl]; }
   P.q[id] = s; save();
 }
 const dueQs = () => { const d = today(); return QS.filter(q => P.q[q.id] && P.q[q.id].due <= d); };
-function recordSig(id, ok) { const s = P.sig[id] || { r: 0, w: 0 }; ok ? s.r++ : s.w++; s.last = ok ? 1 : 0; P.sig[id] = s; save(); }
+function recordSig(id, ok) { const s = P.sig[id] || { r: 0, w: 0 }; ok ? s.r++ : s.w++; s.last = ok ? 1 : 0; s.t = Date.now(); P.sig[id] = s; save(); }
 
 /* ---------- Navigation ---------- */
 const VIEWS = ['start', 'lernen', 'zeichen', 'aufstellung', 'situationen', 'praxis', 'quiz', 'pruefung', 'coach'];
-let pendingDue = false;
+let pendingDue = false, curView = 'start';
 const onShow = {};
 function go(v) {
   if (!VIEWS.includes(v)) v = 'start';
@@ -67,7 +70,8 @@ function go(v) {
   $$('.nav button').forEach(b => b.setAttribute('aria-current', b.dataset.view === v ? 'page' : 'false'));
   const btn = $('.nav button[data-view="' + v + '"]');
   if (btn && btn.scrollIntoView) btn.scrollIntoView({ block: 'nearest', inline: 'center' });
-  try { history.replaceState(null, '', '#' + v); } catch (e) {}
+  curView = v;
+  if (!/access_token|error_description/.test(location.hash)) { try { history.replaceState(null, '', '#' + v); } catch (e) {} }
   if (onShow[v]) onShow[v]();
   window.scrollTo(0, 0);
 }
@@ -1012,9 +1016,18 @@ onShow.coach = renderCoach;
 $('#reset-progress').addEventListener('click', e => {
   const b = e.currentTarget;
   if (b.dataset.arm !== '1') { b.dataset.arm = '1'; b.textContent = 'Wirklich alles löschen?'; setTimeout(() => { b.dataset.arm = ''; b.textContent = 'Fortschritt zurücksetzen'; }, 4000); return; }
-  P = { ch: {}, q: {}, sig: {}, sit: {}, exams: [], lastCh: 'feld' }; save();
+  P = { ch: {}, q: {}, sig: {}, sit: {}, exams: [], lastCh: 'feld', resetAt: Date.now() }; save();
   b.dataset.arm = ''; b.textContent = 'Fortschritt zurücksetzen';
   renderStart();
 });
+/* Schnittstelle für sync.js: Fortschritt lesen und nach dem Zusammenführen ersetzen */
+window.SCHIRI_APP = {
+  get: () => JSON.parse(JSON.stringify(P)),
+  replace(np) {
+    P = Object.assign({ ch: {}, q: {}, sig: {}, sit: {}, exams: [], lastCh: 'feld' }, np);
+    try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {}
+    if (curView === 'start' || curView === 'quiz') onShow[curView]();
+  }
+};
 go((location.hash || '#start').slice(1));
 })();

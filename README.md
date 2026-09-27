@@ -35,7 +35,8 @@ und öffnet das PDF direkt auf der richtigen Seite (`#page=N`). Die Seitenzahlen
 `data.js` (`RP` für Regeln, `SIGP` für Handzeichen). Sie wurden aus dem PDF ausgelesen und
 gelten nur für genau diese Fassung (v05).
 
-Der Fortschritt wird im `localStorage` des Browsers gespeichert.
+Der Fortschritt wird im `localStorage` des Browsers gespeichert. Mit einem eigenen
+Supabase-Projekt lässt er sich zwischen Geräten synchronisieren (siehe unten).
 
 ## Starten
 
@@ -45,6 +46,30 @@ statisch ausliefern, zum Beispiel über GitHub Pages oder mit:
 ```bash
 python -m http.server 8000
 ```
+
+## Fortschritt auf mehreren Geräten (Supabase)
+
+Die Synchronisation ist ausgeschaltet, solange `config.js` leer ist. Einrichtung:
+
+1. Auf [supabase.com](https://supabase.com) ein kostenloses Projekt anlegen, Region zum
+   Beispiel Frankfurt.
+2. Im Dashboard unter **SQL Editor** den Inhalt von
+   [`supabase/schema.sql`](supabase/schema.sql) ausführen. Das legt die Tabelle
+   `progress` samt Row-Level-Security an.
+3. Unter **Authentication → URL Configuration** als Site URL
+   `https://daniel-hopium.github.io/volleyball-referee-trainer/` eintragen und dieselbe
+   Adresse bei den Redirect URLs ergänzen. Zum lokalen Testen kommt noch
+   `http://localhost:8000/` dazu.
+4. Unter **Project Settings → API Keys** die Project URL und den Publishable-Key
+   (früher „anon“) in `config.js` eintragen. Den Secret- bzw. `service_role`-Key niemals.
+5. Optional: Nachdem du dich selbst einmal angemeldet hast, unter
+   **Authentication → Sign In / Providers** „Allow new users to sign up“ ausschalten.
+   Dann kann niemand sonst ein Konto anlegen.
+
+Angemeldet wird per E-Mail-Link, ohne Passwort. Die Daten werden pro Eintrag
+zusammengeführt: Bei jeder Frage gewinnt der neuere Stand, deshalb gehen Antworten nicht
+verloren, wenn man abwechselnd auf Handy und PC übt. „Fortschritt zurücksetzen“ wirkt auf
+allen Geräten.
 
 ## Aufbau
 
@@ -56,6 +81,9 @@ python -m http.server 8000
 | `app.js` | Logik: Navigation, Quiz mit Wiederholung, Prüfung, Handzeichen-Figuren, Trainer, Widgets, Coach |
 | `scoresheet.js` | Spielbericht-Trainer (elektronischer Spielbericht) |
 | `plays.js` | Pfiff-Timing: animierte Ballwechsel |
+| `sync.js` | Anmeldung per E-Mail-Link und Abgleich des Fortschritts über Supabase |
+| `config.js` | Supabase-URL und Publishable-Key (leer = nur lokal) |
+| `supabase/schema.sql` | Tabelle und Zugriffsregeln für den Abgleich |
 
 Neue Fragen kommen in `data.js` in das Array `Q`, im Format
 `[id, kapitel, frage, [4 optionen], richtigerIndex, erklärung, regel]`.

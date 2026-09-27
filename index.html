@@ -479,6 +479,14 @@ rect.z.sel{stroke:var(--yellow);stroke-width:4}
 footer{border-top:1px solid var(--line);padding-block:1.4rem 2rem;color:var(--ink-3);font-size:.86rem}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 
+/* Synchronisation */
+.sync{margin:1.2rem 0 .8rem;max-width:720px}
+.sync h3{margin-top:0}
+.sync-form{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.sync-form input{font:inherit;padding:.55rem .7rem;border:1.5px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);min-width:15rem;flex:1}
+.sync-st{font-size:.9rem;color:var(--ink-2);margin:.5rem 0 0}
+.sync-st.bad{color:var(--bad)}
+
 /* Wiederholung */
 .due-card{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;background:var(--accent-soft);border:1px solid var(--line);border-radius:14px;padding:1rem 1.2rem;margin-bottom:1rem}
 .due-card .muted{margin:0}
@@ -623,7 +631,8 @@ footer{border-top:1px solid var(--line);padding-block:1.4rem 2rem;color:var(--in
       <p class="small"><a href="https://ooe-volleyball.at/infodownloads/schiedsrichterinnen-ausbildung/" target="_blank" rel="noopener">SR-Ausbildung am Beispiel OÖVV</a> · <a href="https://www.fivb.com/volleyball/the-game/official-volleyball-rules/" target="_blank" rel="noopener">FIVB-Regelwerk 2025–2028</a></p>
     </div>
   </div>
-  <p class="muted small">Dein Fortschritt wird nur in diesem Browser gespeichert. <button type="button" class="linkbtn" id="reset-progress">Fortschritt zurücksetzen</button></p>
+  <div class="panel sync" id="sync-card" hidden></div>
+  <p class="muted small">Ohne Anmeldung wird dein Fortschritt nur in diesem Browser gespeichert. <button type="button" class="linkbtn" id="reset-progress">Fortschritt zurücksetzen</button></p>
 </section>
 
 <section id="v-lernen" class="view" hidden>
@@ -735,5 +744,8 @@ footer{border-top:1px solid var(--line);padding-block:1.4rem 2rem;color:var(--in
 <script src="scoresheet.js" charset="utf-8"></script>
 <script src="plays.js" charset="utf-8"></script>
 <script src="app.js" charset="utf-8"></script>
+<script src="config.js" charset="utf-8"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"></script>
+<script src="sync.js" charset="utf-8"></script>
 </body>
 </html>
