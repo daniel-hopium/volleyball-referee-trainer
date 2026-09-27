@@ -44,6 +44,9 @@ Kategorien: **Neu** (neue Funktionen), **Verbessert** (bestehendes Verhalten), *
 - Regel-Coach, der Fragen über Claude beantwortet, wenn die Seite als Artifact läuft.
 
 ### Verbessert
+- Auf breiten Bildschirmen (ab 1080 px) stehen Logo und Navigation in einer Zeile, der
+  Header ist dadurch deutlich niedriger. Auf schmaleren Bildschirmen bleibt die Navigation
+  in einer eigenen Zeile.
 - Pfiff-Timing: Ein Knopf „Wiederholen“ spielt den Spielzug noch einmal ab, ohne die
   Wertung zu verändern. Der Zähler oben stimmt jetzt auch nach einem zu frühen Pfiff.
 - Lernen: Die Kapitelliste scrollt ohne sichtbare Scrollbar.
