@@ -54,6 +54,8 @@ const SCN = [
     look: 'Blick: vor dem Schlag auf die Füße des Aufschlägers, im Schlag auf den Ball.', r: 'Regel 12.4.3' }
 ];
 
+const REPLAY = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4v5h5"/></svg>';
+let played = false;
 let root = null, D = null, run = null, stats = { n: 0, time: 0, dec: 0 }, order = [], oi = 0, slow = false;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -96,17 +98,21 @@ function render() {
     <div class="row-btns pz-ctl">
       <button type="button" class="btn btn-primary" id="pz-play">Abspielen</button>
       <button type="button" class="btn pz-whistle" id="pz-whistle" disabled>Pfiff</button>
+      <button type="button" class="btn btn-ghost pz-replay" id="pz-replay" disabled title="Spielzug wiederholen">${REPLAY}<span>Wiederholen</span></button>
       <label class="toggle"><input type="checkbox" id="pz-slow"${slow ? ' checked' : ''}> Zeitlupe</label>
     </div>
     <p class="muted small">Drück „Pfiff“ (oder die Leertaste) genau dann, wenn der Ballwechsel zu Ende ist oder ein Fehler passiert. Nicht vorher.</p>
     <div id="pz-out"></div>`;
+  played = false;
   root.querySelector('#pz-play').addEventListener('click', () => start(sc));
+  root.querySelector('#pz-replay').addEventListener('click', () => start(sc, true));
   root.querySelector('#pz-whistle').addEventListener('click', () => whistle());
   root.querySelector('#pz-slow').addEventListener('change', e => { slow = e.target.checked; });
 }
 function start(sc, replay) {
   stop();
-  root.querySelector('#pz-out').innerHTML = '';
+  if (!replay) root.querySelector('#pz-out').innerHTML = '';
+  root.querySelector('#pz-replay').disabled = true;
   root.querySelector('#pz-flash').hidden = true;
   root.querySelector('#pz-net').classList.remove('hit');
   root.querySelector('#pz-play').disabled = true;
@@ -139,6 +145,8 @@ function finish(tp) {
   const sc = run.sc;
   stop();
   root.querySelector('#pz-whistle').disabled = true;
+  root.querySelector('#pz-replay').disabled = false;
+  played = true;
   const early = sc.early != null ? sc.early : sc.at - 0.08;
   const d = tp == null ? null : tp - sc.at;
   const verdict = tp == null ? 'none' : tp < early ? 'early' : d <= sc.win ? 'ok' : 'late';
@@ -146,11 +154,12 @@ function finish(tp) {
   fl.hidden = false;
   fl.className = 'pz-flash ' + (verdict === 'ok' ? 'ok' : 'bad');
   fl.textContent = verdict === 'ok' ? `Pfiff! Reaktion ${Math.max(0, d).toFixed(2)} s` : verdict === 'early' ? 'Zu früh gepfiffen' : verdict === 'late' ? `Zu spät (${d.toFixed(2)} s nach dem Moment)` : 'Kein Pfiff';
-  const count = !run.replay;
-  if (count) { stats.n++; if (verdict === 'ok') stats.time++; }
+  if (run.replay) return;
+  stats.n++; if (verdict === 'ok') stats.time++;
+  showStats();
   const out = root.querySelector('#pz-out');
   if (verdict === 'early') {
-    out.innerHTML = `<div class="fb fb-bad"><p class="fb-h">Da war noch kein Fehler.</p><p>${esc(sc.e)}</p><p class="muted">${esc(sc.look)}</p><div class="fb-row"><span class="r">${esc(sc.r)}</span><button type="button" class="btn btn-ghost btn-s" id="pz-again">Nochmal ansehen</button><button type="button" class="btn btn-primary btn-s" id="pz-next">Nächster Spielzug</button></div></div>`;
+    out.innerHTML = `<div class="fb fb-bad"><p class="fb-h">Da war noch kein Fehler.</p><p>${esc(sc.e)}</p><p class="muted">${esc(sc.look)}</p><div class="fb-row"><span class="r">${esc(sc.r)}</span><button type="button" class="btn btn-primary btn-s" id="pz-next">Nächster Spielzug</button></div></div>`;
     bindNext();
     return;
   }
@@ -161,16 +170,16 @@ function finish(tp) {
     const ok = b.dataset.id === sc.sig;
     out.querySelectorAll('.pz-opt').forEach(x => { x.disabled = true; if (x.dataset.id === sc.sig) x.classList.add('is-right'); });
     if (!ok) b.classList.add('is-wrong');
-    if (ok && count) stats.dec++;
+    if (ok) stats.dec++;
     const fb = out.querySelector('.fb');
     fb.hidden = false; fb.className = 'fb ' + (ok ? 'fb-ok' : 'fb-bad');
-    fb.innerHTML = `<p class="fb-h">${ok ? 'Richtig.' : 'Richtig wäre: ' + esc(sigName(sc.sig))}</p><p>${esc(sc.e)}</p><p class="muted">${esc(sc.look)}</p><div class="fb-row"><span class="r">${esc(sc.r)}</span><button type="button" class="btn btn-ghost btn-s" id="pz-again">Nochmal ansehen</button><button type="button" class="btn btn-primary btn-s" id="pz-next">Nächster Spielzug</button></div>`;
+    fb.innerHTML = `<p class="fb-h">${ok ? 'Richtig.' : 'Richtig wäre: ' + esc(sigName(sc.sig))}</p><p>${esc(sc.e)}</p><p class="muted">${esc(sc.look)}</p><div class="fb-row"><span class="r">${esc(sc.r)}</span><button type="button" class="btn btn-primary btn-s" id="pz-next">Nächster Spielzug</button></div>`;
     bindNext();
-    root.querySelector('.pz-head .q-meta span:last-child').textContent = `Timing ${stats.time}/${stats.n} · Entscheidung ${stats.dec}/${stats.n}`;
+    showStats();
   }));
 }
+function showStats() { root.querySelector('.pz-head .q-meta span:last-child').textContent = `Timing ${stats.time}/${stats.n} · Entscheidung ${stats.dec}/${stats.n}`; }
 function bindNext() {
-  root.querySelector('#pz-again').addEventListener('click', () => { const sc = SCN[order[oi]]; root.querySelector('#pz-play').disabled = false; start(sc, true); });
   root.querySelector('#pz-next').addEventListener('click', () => {
     oi++;
     if (oi >= order.length) { order = shuffle(SCN.map((s, i) => i)); oi = 0; }
@@ -192,6 +201,6 @@ return {
     if (!order.length) order = shuffle(SCN.map((s, i) => i));
     render();
   },
-  pause() { if (run && !run.done) { stop(); root.querySelector('#pz-play').disabled = false; root.querySelector('#pz-whistle').disabled = true; } }
+  pause() { if (run && !run.done) { stop(); root.querySelector(played ? '#pz-replay' : '#pz-play').disabled = false; root.querySelector('#pz-whistle').disabled = true; } }
 };
 })();
